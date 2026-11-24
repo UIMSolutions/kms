@@ -1,0 +1,19 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+	<Dialog id="historyDialog" title="{i18n>article.history}" contentWidth="40rem" contentHeight="60%" resizable="true">
+		<List items="{history>/items}" noDataText="-">
+			<CustomListItem>
+				<HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMargin">
+					<VBox>
+						<Title text="{parts: ['i18n>article.version', 'history>version'], formatter: '.formatMessage'}: {history>title}"/>
+						<Text text="{path: 'history>changedAt', formatter: '.formatter.dateTime'} · {history>changedByName} · {path: 'history>status', formatter: '.formatter.statusText'}"/>
+					</VBox>
+					<HBox>
+						<Button text="{i18n>article.preview}" type="Transparent" press=".onPreviewVersion"/>
+						<Button text="{i18n>article.restore}" press=".onRestoreVersion"/>
+					</HBox>
+				</HBox>
+			</CustomListItem>
+		</List>
+		<endButton><Button text="{i18n>common.close}" press=".onCloseHistory"/></endButton>
+	</Dialog>
+</core:FragmentDefinition>

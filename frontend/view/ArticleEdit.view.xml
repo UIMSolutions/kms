@@ -1,0 +1,57 @@
+<mvc:View
+	controllerName="uim.myfiori.kms.controller.ArticleEdit"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns:f="sap.ui.layout.form"
+	xmlns:u="sap.ui.unified">
+	<Page title="{= ${edit>/id} ? ${i18n>article.edit} : ${i18n>article.new} }" showNavButton="true" navButtonPress=".onCancel">
+		<f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="2" labelSpanM="3" columnsL="1" columnsXL="1">
+			<Label text="{i18n>common.title}" required="true"/>
+			<Input value="{edit>/title}" maxLength="200" valueLiveUpdate="true"/>
+			<Label text="{i18n>common.space}" required="true"/>
+			<Select selectedKey="{edit>/spaceId}" items="{spaces>/items}" forceSelection="false" width="100%">
+				<core:Item key="{spaces>id}" text="{spaces>name}"/>
+			</Select>
+			<Label text="{i18n>article.summary}"/>
+			<TextArea value="{edit>/summary}" rows="2" maxLength="1000" width="100%"/>
+			<Label text="{i18n>common.tags}"/>
+			<Input value="{edit>/tagsText}" placeholder="{i18n>common.tagsHint}"/>
+		</f:SimpleForm>
+		<IconTabBar id="bodyTabs" expandable="false" class="sapUiResponsiveContentPadding" stretchContentHeight="false">
+			<items>
+				<IconTabFilter text="{i18n>article.write}" key="write" icon="sap-icon://edit">
+					<TextArea value="{edit>/body}" rows="22" width="100%" valueLiveUpdate="true" placeholder="# Heading&#10;&#10;Text with **bold**, *italic*, `code`, [links](https://example.org) ..."
+						class="sapUiTinyMarginTop"/>
+				</IconTabFilter>
+				<IconTabFilter text="{i18n>article.preview}" key="preview" icon="sap-icon://show">
+					<core:HTML content="{path: 'edit>/body', formatter: '.formatter.markdown'}" sanitizeContent="true"/>
+				</IconTabFilter>
+				<IconTabFilter text="{i18n>article.attachments}" key="attachments" icon="sap-icon://attachment"
+					count="{= ${edit>/attachments}.length }">
+					<List items="{edit>/attachments}" mode="Delete" delete=".onRemoveAttachment" noDataText="{i18n>article.noAttachments}">
+						<headerToolbar>
+							<Toolbar>
+								<ToolbarSpacer/>
+								<Button icon="sap-icon://attachment" text="{i18n>article.addAttachment}" press=".onAddAttachment"/>
+								<u:FileUploader buttonOnly="true" buttonText="{i18n>article.uploadAttachment}" icon="sap-icon://upload"
+									multiple="true" sameFilenameAllowed="true" change=".onUploadAttachment"/>
+							</Toolbar>
+						</headerToolbar>
+						<StandardListItem title="{edit>title}" description="{edit>fileName}"
+							info="{path: 'edit>size', formatter: '.formatter.fileSize'}"
+							icon="{parts: [{value: 'document'}, 'edit>kind'], formatter: '.formatter.kindIcon'}"/>
+					</List>
+				</IconTabFilter>
+			</items>
+		</IconTabBar>
+		<footer>
+			<OverflowToolbar>
+				<ToolbarSpacer/>
+				<Button type="Emphasized" text="{i18n>common.save}" press=".onSave"/>
+				<Button text="{i18n>article.publish}" press=".onSaveAndPublish" visible="{= ${edit>/status} !== 'published' }"/>
+				<Button text="{i18n>common.cancel}" press=".onCancel"/>
+			</OverflowToolbar>
+		</footer>
+	</Page>
+</mvc:View>

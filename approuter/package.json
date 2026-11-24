@@ -1,0 +1,9 @@
+{
+  "name": "kms-approuter",
+  "version": "1.0.0",
+  "description": "Approuter: single entry point (XSUAA login, routing to kms-backend, static Fiori app)",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": { "start": "node node_modules/@sap/approuter/approuter.js" },
+  "dependencies": { "@sap/approuter": "^20.0.0" }
+}

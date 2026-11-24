@@ -1,0 +1,38 @@
+{
+  "welcomeFile": "/app/index.html",
+  "authenticationMethod": "route",
+  "logout": {
+    "logoutEndpoint": "/do/logout",
+    "logoutPage": "/app/index.html"
+  },
+  "routes": [
+    {
+      "source": "^/app/(.*)$",
+      "target": "$1",
+      "localDir": "resources",
+      "authenticationType": "xsuaa",
+      "scope": ["$XSAPPNAME.Reader", "$XSAPPNAME.Editor", "$XSAPPNAME.Admin"],
+      "cacheControl": "no-cache, no-store, must-revalidate"
+    },
+    {
+      "source": "^/api/v1/(.*)$",
+      "target": "/api/v1/$1",
+      "destination": "kms-backend",
+      "authenticationType": "xsuaa",
+      "csrfProtection": true
+    },
+    {
+      "source": "^/odata/(.*)$",
+      "target": "/odata/$1",
+      "destination": "kms-backend",
+      "authenticationType": "xsuaa",
+      "csrfProtection": true
+    },
+    {
+      "source": "^/healthz$",
+      "target": "/healthz",
+      "destination": "kms-backend",
+      "authenticationType": "none"
+    }
+  ]
+}

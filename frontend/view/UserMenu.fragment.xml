@@ -1,0 +1,15 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+	<ResponsivePopover id="userMenu" showHeader="false" placement="Bottom" contentWidth="16rem">
+		<VBox class="sapUiSmallMargin">
+			<Title text="{session>/user/displayName}"/>
+			<Text text="{session>/user/username} · {path: 'session>/user/role', formatter: '.formatter.roleText'}"/>
+			<Text text="{session>/user/email}" visible="{= !!${session>/user/email} }"/>
+		</VBox>
+		<List showSeparators="None">
+			<StandardListItem title="{i18n>user.profile}" icon="sap-icon://person-placeholder" type="Active" press=".onProfile"/>
+			<StandardListItem title="{i18n>user.changePassword}" icon="sap-icon://key" type="Active" press=".onChangePassword"
+				visible="{= !${session>/user/external} }"/>
+			<StandardListItem title="{i18n>user.logout}" icon="sap-icon://log" type="Active" press=".onLogout"/>
+		</List>
+	</ResponsivePopover>
+</core:FragmentDefinition>

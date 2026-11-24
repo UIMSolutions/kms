@@ -1,0 +1,67 @@
+<mvc:View
+	controllerName="uim.myfiori.kms.controller.Home"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns:l="sap.ui.layout">
+	<Page title="{i18n>nav.home}" showHeader="false">
+		<VBox class="sapUiMediumMargin">
+			<Title text="{parts: ['i18n>home.welcome', 'session>/user/displayName'], formatter: '.formatMessage'}" level="H1" titleStyle="H2"/>
+			<Text text="{i18n>home.subtitle}" class="sapUiTinyMarginTop"/>
+			<SearchField id="heroSearch" class="kmsHeroSearch sapUiSmallMarginTop" placeholder="{i18n>search.placeholder}"
+				search=".onSearch" width="100%"/>
+			<HBox class="sapUiSmallMarginTop" visible="{session>/isEditor}">
+				<Button icon="sap-icon://add-document" text="{i18n>home.newArticle}" type="Emphasized" press=".onNewArticle"
+					class="sapUiTinyMarginEnd"/>
+				<Button icon="sap-icon://upload" text="{i18n>home.upload}" press=".onUpload"/>
+			</HBox>
+		</VBox>
+
+		<HBox wrap="Wrap" class="sapUiSmallMarginBeginEnd">
+			<GenericTile header="{i18n>nav.articles}" subheader="{stats>/publishedArticles} {i18n>status.published}"
+				press=".onTile" class="sapUiTinyMargin" frameType="OneByOne" app:route="articles"
+				xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+				<TileContent><NumericContent value="{stats>/articles}" icon="sap-icon://document-text" withMargin="false"/></TileContent>
+			</GenericTile>
+			<GenericTile header="{i18n>nav.documents}" subheader="{path: 'stats>/storageBytes', formatter: '.formatter.fileSize'}"
+				press=".onTile" class="sapUiTinyMargin" frameType="OneByOne" app:route="documents"
+				xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+				<TileContent><NumericContent value="{stats>/documents}" icon="sap-icon://attachment" withMargin="false"/></TileContent>
+			</GenericTile>
+			<GenericTile header="{i18n>nav.spaces}" press=".onTile" class="sapUiTinyMargin" frameType="OneByOne" app:route="spaces"
+				xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+				<TileContent><NumericContent value="{stats>/spaces}" icon="sap-icon://course-book" withMargin="false"/></TileContent>
+			</GenericTile>
+			<GenericTile header="{i18n>home.index}" subheader="{parts: ['i18n>home.indexTerms', 'stats>/vocabulary'], formatter: '.formatMessage'}"
+				press=".onTile" class="sapUiTinyMargin" frameType="OneByOne" app:route="search"
+				xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+				<TileContent><NumericContent value="{stats>/indexedItems}" icon="sap-icon://search" withMargin="false"/></TileContent>
+			</GenericTile>
+			<GenericTile header="{i18n>nav.users}" press=".onTile" class="sapUiTinyMargin" frameType="OneByOne" app:route="users"
+				visible="{session>/isAdmin}"
+				xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+				<TileContent><NumericContent value="{stats>/users}" icon="sap-icon://group" withMargin="false"/></TileContent>
+			</GenericTile>
+		</HBox>
+
+		<l:Grid defaultSpan="XL6 L6 M12 S12" class="sapUiSmallMarginBeginEnd">
+			<List headerText="{i18n>home.recent}" items="{stats>/recent}" noDataText="{i18n>article.empty}">
+				<StandardListItem title="{stats>title}" type="Navigation" press=".onRecent"
+					icon="{path: 'stats>kind', formatter: '.formatter.kindIcon'}"
+					description="{path: 'stats>kind', formatter: '.formatter.kindText'} · {stats>by}"
+					info="{path: 'stats>updatedAt', formatter: '.formatter.relative'}"/>
+			</List>
+			<VBox>
+				<Title text="{i18n>home.topTags}" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+				<FlexBox wrap="Wrap" items="{stats>/topTags}">
+					<Button text="#{stats>key} ({stats>count})" type="Transparent" press=".onTag" class="sapUiTinyMarginEnd"/>
+				</FlexBox>
+				<Title text="{i18n>nav.spaces}" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+				<List items="{spaces>/items}">
+					<StandardListItem title="{spaces>name}" description="{spaces>description}" icon="{spaces>icon}"
+						type="Navigation" press=".onSpace" counter="{spaces>articleCount}"/>
+				</List>
+			</VBox>
+		</l:Grid>
+	</Page>
+</mvc:View>

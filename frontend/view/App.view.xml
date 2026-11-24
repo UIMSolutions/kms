@@ -1,0 +1,51 @@
+<mvc:View
+	controllerName="uim.myfiori.kms.controller.App"
+	xmlns="sap.m"
+	xmlns:tnt="sap.tnt"
+	xmlns:mvc="sap.ui.core.mvc"
+	displayBlock="true">
+	<tnt:ToolPage id="toolPage" sideExpanded="{= !${device>/system/phone} }">
+		<tnt:header>
+			<tnt:ToolHeader visible="{session>/loggedIn}">
+				<Button icon="sap-icon://menu2" type="Transparent" press=".onToggleSide" tooltip="Menu">
+					<layoutData><OverflowToolbarLayoutData priority="NeverOverflow"/></layoutData>
+				</Button>
+				<Title text="{i18n>appTitle}" level="H1" wrapping="false">
+					<layoutData><OverflowToolbarLayoutData priority="Disappear"/></layoutData>
+				</Title>
+				<ToolbarSpacer/>
+				<SearchField id="headerSearch" width="26rem" placeholder="{i18n>home.searchPlaceholder}"
+					enableSuggestions="true" suggest=".onSuggest" search=".onHeaderSearch">
+					<layoutData><OverflowToolbarLayoutData priority="NeverOverflow" shrinkable="true"/></layoutData>
+				</SearchField>
+				<ToolbarSpacer/>
+				<Button icon="sap-icon://add-document" text="{i18n>home.newArticle}" type="Transparent"
+					visible="{session>/isEditor}" press=".onNewArticle">
+					<layoutData><OverflowToolbarLayoutData priority="Low"/></layoutData>
+				</Button>
+				<Avatar initials="{= (${session>/user/displayName} || ${session>/user/username} || '?').substring(0, 2).toUpperCase() }"
+					displaySize="XS" press=".onUserMenu" tooltip="{session>/user/displayName}"/>
+			</tnt:ToolHeader>
+		</tnt:header>
+		<tnt:sideContent>
+			<tnt:SideNavigation id="sideNav" visible="{session>/loggedIn}" itemSelect=".onNavSelect">
+				<tnt:NavigationList>
+					<tnt:NavigationListItem text="{i18n>nav.home}" icon="sap-icon://home" key="home"/>
+					<tnt:NavigationListItem text="{i18n>nav.search}" icon="sap-icon://search" key="search"/>
+					<tnt:NavigationListItem text="{i18n>nav.articles}" icon="sap-icon://document-text" key="articles"/>
+					<tnt:NavigationListItem text="{i18n>nav.documents}" icon="sap-icon://attachment" key="documents"/>
+					<tnt:NavigationListItem text="{i18n>nav.spaces}" icon="sap-icon://course-book" key="spaces"/>
+				</tnt:NavigationList>
+				<tnt:fixedItem>
+					<tnt:NavigationList>
+						<tnt:NavigationListItem text="{i18n>nav.users}" icon="sap-icon://group" key="users" visible="{session>/isAdmin}"/>
+						<tnt:NavigationListItem text="{i18n>nav.admin}" icon="sap-icon://action-settings" key="admin" visible="{session>/isAdmin}"/>
+					</tnt:NavigationList>
+				</tnt:fixedItem>
+			</tnt:SideNavigation>
+		</tnt:sideContent>
+		<tnt:mainContents>
+			<NavContainer id="pageContainer"/>
+		</tnt:mainContents>
+	</tnt:ToolPage>
+</mvc:View>

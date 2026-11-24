@@ -1,0 +1,80 @@
+<mvc:View
+	controllerName="uim.myfiori.kms.controller.Search"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core">
+	<Page title="{i18n>nav.search}" showHeader="false">
+		<VBox class="sapUiSmallMargin">
+			<SearchField id="searchField" value="{search>/q}" placeholder="{i18n>search.placeholder}" search=".onSearch"
+				width="100%" class="kmsHeroSearch"/>
+			<HBox alignItems="Center" wrap="Wrap" class="sapUiTinyMarginTop">
+				<Text text="{parts: ['i18n>search.results', 'search>/total', 'search>/tookMs'], formatter: '.formatMessage'}"
+					class="sapUiSmallMarginEnd"/>
+				<HBox items="{search>/active}">
+					<Button text="{search>label}" icon="sap-icon://decline" iconFirst="false" type="Transparent"
+						press=".onRemoveFilter" class="sapUiTinyMarginEnd"/>
+				</HBox>
+				<Link text="{i18n>search.clearFilters}" press=".onClearFilters" visible="{= ${search>/active}.length > 0 }"/>
+			</HBox>
+			<HBox visible="{= ${search>/suggestions}.length > 0 }" alignItems="Center" class="sapUiTinyMarginTop">
+				<Text text="{i18n>search.didYouMean}" class="sapUiTinyMarginEnd"/>
+				<HBox items="{search>/suggestions}">
+					<Link text="{search>}" press=".onSuggestion" class="sapUiTinyMarginEnd"/>
+				</HBox>
+			</HBox>
+		</VBox>
+		<FlexBox wrap="Wrap" alignItems="Start" class="sapUiSmallMarginBeginEnd">
+			<VBox class="kmsFacets sapUiSmallMarginEnd">
+				<List headerText="{i18n>search.facet.kind}" items="{search>/kinds}" visible="{= ${search>/kinds}.length > 0 }"
+					class="sapUiSmallMarginBottom">
+					<StandardListItem title="{path: 'search>value', formatter: '.formatter.kindText'}" counter="{search>count}"
+						icon="{path: 'search>value', formatter: '.formatter.kindIcon'}" type="Active" press=".onFacet"
+						app:facet="kind" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"/>
+				</List>
+				<List headerText="{i18n>search.facet.space}" items="{search>/spaces}" visible="{= ${search>/spaces}.length > 0 }"
+					class="sapUiSmallMarginBottom">
+					<StandardListItem title="{search>label}" counter="{search>count}" type="Active" press=".onFacet"
+						app:facet="space" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"/>
+				</List>
+				<List headerText="{i18n>search.facet.media}" items="{search>/mediaKinds}" visible="{= ${search>/mediaKinds}.length > 0 }"
+					class="sapUiSmallMarginBottom">
+					<StandardListItem title="{path: 'search>value', formatter: '.formatter.kindText'}" counter="{search>count}"
+						icon="{path: 'search>value', formatter: '.formatter.kindIcon'}" type="Active" press=".onFacet"
+						app:facet="media" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"/>
+				</List>
+				<List headerText="{i18n>search.facet.tag}" items="{search>/tags}" visible="{= ${search>/tags}.length > 0 }">
+					<StandardListItem title="#{search>value}" counter="{search>count}" type="Active" press=".onFacet"
+						app:facet="tag" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"/>
+				</List>
+			</VBox>
+			<VBox width="100%">
+				<layoutData><FlexItemData growFactor="1" minWidth="20rem" baseSize="0"/></layoutData>
+				<List id="results" items="{search>/hits}" noDataText="{i18n>search.noResults}" growing="false">
+					<CustomListItem type="Active" press=".onOpen">
+						<HBox class="sapUiSmallMargin" alignItems="Start">
+							<core:Icon src="{parts: ['search>kind', 'search>mediaKind'], formatter: '.formatter.kindIcon'}"
+								size="1.5rem" class="sapUiSmallMarginEnd"/>
+							<VBox>
+								<Link text="{search>title}" press=".onOpen" emphasized="true"/>
+								<FormattedText htmlText="{path: 'search>snippet', formatter: '.formatter.snippet'}" class="kmsSnippet"/>
+								<HBox alignItems="Center" wrap="Wrap" class="sapUiTinyMarginTop">
+									<ObjectStatus text="{path: 'search>kind', formatter: '.formatter.kindText'}" state="Information"
+										class="sapUiSmallMarginEnd"/>
+									<ObjectStatus text="{path: 'search>status', formatter: '.formatter.statusText'}"
+										state="{path: 'search>status', formatter: '.formatter.statusState'}"
+										visible="{= ${search>kind} === 'article' &amp;&amp; ${search>status} !== 'published' }"
+										class="sapUiSmallMarginEnd"/>
+									<Text text="{search>spaceName}" class="sapUiSmallMarginEnd"/>
+									<Text text="{path: 'search>updatedAt', formatter: '.formatter.relative'}" class="sapUiSmallMarginEnd"/>
+									<Text text="{path: 'search>tags', formatter: '.formatter.tagsText'}"/>
+								</HBox>
+							</VBox>
+						</HBox>
+					</CustomListItem>
+				</List>
+				<Button text="{i18n>common.more}" width="100%" press=".onMore"
+					visible="{= ${search>/hits}.length &lt; ${search>/total} }"/>
+			</VBox>
+		</FlexBox>
+	</Page>
+</mvc:View>

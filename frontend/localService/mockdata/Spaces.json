@@ -1,0 +1,4 @@
+[
+	{ "id": "s1", "key": "GEN", "name": "General", "description": "Company-wide knowledge", "icon": "sap-icon://course-book", "articleCount": 2, "documentCount": 1 },
+	{ "id": "s2", "key": "IT", "name": "IT & Tools", "description": "Guides and troubleshooting", "icon": "sap-icon://it-system", "articleCount": 1, "documentCount": 0 }
+]

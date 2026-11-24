@@ -1,0 +1,58 @@
+<mvc:View
+	controllerName="uim.myfiori.kms.controller.Articles"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core">
+	<Page title="{i18n>nav.articles}">
+		<headerContent>
+			<Button icon="sap-icon://add-document" text="{i18n>article.new}" type="Emphasized" press=".onNew"
+				visible="{session>/isEditor}"/>
+		</headerContent>
+		<Table id="articleTable" items="{list>/items}" noDataText="{i18n>article.empty}" sticky="ColumnHeaders,HeaderToolbar"
+			growing="false" class="sapUiResponsiveContentPadding">
+			<headerToolbar>
+				<OverflowToolbar>
+					<SearchField id="articleFilter" width="16rem" placeholder="{i18n>article.searchPlaceholder}" search=".onFilter"/>
+					<Select id="articleSpace" selectedKey="" change=".onFilter" items="{spaces>/withAll}" forceSelection="true">
+						<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>name} : ${i18n>common.all} + ' ' + ${i18n>nav.spaces} }"/>
+					</Select>
+					<Select id="articleStatus" selectedKey="" change=".onFilter" visible="{session>/isEditor}">
+						<core:Item key="" text="{i18n>common.all}"/>
+						<core:Item key="published" text="{i18n>status.published}"/>
+						<core:Item key="draft" text="{i18n>status.draft}"/>
+						<core:Item key="archived" text="{i18n>status.archived}"/>
+					</Select>
+					<ToolbarSpacer/>
+					<Label text="{i18n>article.orderBy}"/>
+					<Select id="articleOrder" selectedKey="" change=".onFilter">
+						<core:Item key="" text="{i18n>article.order.updated}"/>
+						<core:Item key="createdAt desc" text="{i18n>article.order.created}"/>
+						<core:Item key="title" text="{i18n>article.order.title}"/>
+						<core:Item key="views desc" text="{i18n>article.order.views}"/>
+					</Select>
+					<Button icon="sap-icon://refresh" tooltip="{i18n>common.refresh}" press=".onFilter"/>
+				</OverflowToolbar>
+			</headerToolbar>
+			<columns>
+				<Column width="45%"><Text text="{i18n>common.title}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>common.space}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>common.status}"/></Column>
+				<Column minScreenWidth="Desktop" demandPopin="true"><Text text="{i18n>common.tags}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true" hAlign="End"><Text text="{i18n>common.updated}"/></Column>
+			</columns>
+			<items>
+				<ColumnListItem type="Navigation" press=".onOpen">
+					<cells>
+						<ObjectIdentifier title="{list>title}" text="{list>summary}"/>
+						<Text text="{list>spaceName}"/>
+						<ObjectStatus text="{path: 'list>status', formatter: '.formatter.statusText'}"
+							state="{path: 'list>status', formatter: '.formatter.statusState'}"/>
+						<Text text="{path: 'list>tags', formatter: '.formatter.tagsText'}"/>
+						<ObjectAttribute text="{path: 'list>updatedAt', formatter: '.formatter.relative'} · {list>updatedByName}"/>
+					</cells>
+				</ColumnListItem>
+			</items>
+		</Table>
+		<Button text="{i18n>common.more}" width="100%" press=".onMore" visible="{= ${list>/items}.length &lt; ${list>/total} }"/>
+	</Page>
+</mvc:View>

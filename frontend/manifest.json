@@ -1,0 +1,86 @@
+{
+	"_version": "1.60.0",
+	"sap.app": {
+		"id": "uim.myfiori.kms",
+		"type": "application",
+		"i18n": {
+			"bundleUrl": "i18n/i18n.properties",
+			"supportedLocales": ["", "de"],
+			"fallbackLocale": ""
+		},
+		"applicationVersion": { "version": "1.0.0" },
+		"title": "{{appTitle}}",
+		"description": "{{appDescription}}",
+		"dataSources": {
+			"odataService": {
+				"uri": "/odata/v4/kms/",
+				"type": "OData",
+				"settings": { "odataVersion": "4.0", "localUri": "localService/metadata.xml" }
+			}
+		}
+	},
+	"sap.ui": {
+		"technology": "UI5",
+		"icons": { "icon": "sap-icon://course-book" },
+		"deviceTypes": { "desktop": true, "tablet": true, "phone": true }
+	},
+	"sap.ui5": {
+		"rootView": { "viewName": "uim.myfiori.kms.view.App", "type": "XML", "id": "app" },
+		"dependencies": {
+			"minUI5Version": "1.120.0",
+			"libs": {
+				"sap.m": {},
+				"sap.tnt": {},
+				"sap.f": {},
+				"sap.ui.core": {},
+				"sap.ui.layout": {},
+				"sap.ui.unified": {}
+			}
+		},
+		"contentDensities": { "compact": true, "cozy": true },
+		"models": {
+			"i18n": {
+				"type": "sap.ui.model.resource.ResourceModel",
+				"settings": { "bundleName": "uim.myfiori.kms.i18n.i18n", "supportedLocales": ["", "de"], "fallbackLocale": "" }
+			}
+		},
+		"routing": {
+			"config": {
+				"routerClass": "sap.m.routing.Router",
+				"type": "View",
+				"viewType": "XML",
+				"path": "uim.myfiori.kms.view",
+				"controlId": "pageContainer",
+				"controlAggregation": "pages",
+				"transition": "show",
+				"async": true,
+				"bypassed": { "target": "home" }
+			},
+			"routes": [
+				{ "name": "home", "pattern": "", "target": "home" },
+				{ "name": "login", "pattern": "login", "target": "login" },
+				{ "name": "search", "pattern": "search:?query:", "target": "search" },
+				{ "name": "articles", "pattern": "articles:?query:", "target": "articles" },
+				{ "name": "articleNew", "pattern": "new-article:?query:", "target": "articleEdit" },
+				{ "name": "articleEdit", "pattern": "articles/{id}/edit", "target": "articleEdit" },
+				{ "name": "article", "pattern": "articles/{id}", "target": "article" },
+				{ "name": "documents", "pattern": "documents:?query:", "target": "documents" },
+				{ "name": "spaces", "pattern": "spaces", "target": "spaces" },
+				{ "name": "users", "pattern": "users", "target": "users" },
+				{ "name": "admin", "pattern": "admin", "target": "admin" }
+			],
+			"targets": {
+				"home": { "id": "home", "name": "Home", "level": 1 },
+				"login": { "id": "login", "name": "Login", "level": 0 },
+				"search": { "id": "search", "name": "Search", "level": 1 },
+				"articles": { "id": "articles", "name": "Articles", "level": 1 },
+				"article": { "id": "article", "name": "ArticleDetail", "level": 2 },
+				"articleEdit": { "id": "articleEdit", "name": "ArticleEdit", "level": 3 },
+				"documents": { "id": "documents", "name": "Documents", "level": 1 },
+				"spaces": { "id": "spaces", "name": "Spaces", "level": 1 },
+				"users": { "id": "users", "name": "Users", "level": 1 },
+				"admin": { "id": "admin", "name": "Admin", "level": 1 }
+			}
+		}
+	}
+}

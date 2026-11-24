@@ -1,0 +1,15 @@
+{
+  "name": "kms-frontend",
+  "version": "1.0.0",
+  "description": "Knowledge management system - SAP Fiori 3 / OpenUI5 frontend",
+  "private": true,
+  "scripts": {
+    "start": "ui5 serve --config ui5.yaml --open index.html",
+    "test": "ui5 serve --config ui5.yaml --open test/testsuite.qunit.html",
+    "build": "ui5 build --config ui5.yaml --clean-dest --dest dist"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^4.0.0",
+    "ui5-middleware-simpleproxy": "^3.0.0"
+  }
+}

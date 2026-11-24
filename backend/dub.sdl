@@ -1,0 +1,30 @@
+name "kms-backend"
+description "Knowledge management system backend (vibe.d 0.10.5, hexagonal / Clean Architecture, REST + OData v4 for SAP Fiori)"
+authors "UI Manufaktur"
+license "Apache-2.0"
+targetType "executable"
+targetName "kms-backend"
+targetPath "build"
+mainSourceFile "source/app.d"
+sourcePaths "source"
+importPaths "source"
+stringImportPaths "views"
+
+dependency "vibe-d" version="==0.10.5"
+dependency "uim-framework:core" version="==26.11.2"
+dependency "dyaml" version="~>0.10.0"
+
+buildRequirements "silenceDeprecations"
+
+configuration "application" {
+	targetType "executable"
+}
+
+configuration "unittest" {
+	targetType "executable"
+	targetName "kms-backend-tests"
+	sourcePaths "source" "tests"
+	importPaths "source" "tests"
+	excludedSourceFiles "source/app.d"
+	mainSourceFile "tests/main.d"
+}

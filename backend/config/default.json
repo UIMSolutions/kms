@@ -1,0 +1,37 @@
+{
+  "server": {
+    "port": 8080,
+    "bindAddresses": ["0.0.0.0"],
+    "frontendDir": "../frontend",
+    "corsOrigin": "",
+    "maxRequestBytes": 2097152
+  },
+  "log": {
+    "level": "info",
+    "requests": true,
+    "file": ""
+  },
+  "storage": {
+    "driver": "file",
+    "dataDir": "data"
+  },
+  "media": {
+    "maxUploadMB": 100,
+    "quotaMB": 0,
+    "allowedExtensions": []
+  },
+  "auth": {
+    "mode": "local",
+    "tokenSecret": "",
+    "tokenTtlMinutes": 480
+  },
+  "bootstrap": {
+    "adminUser": "admin",
+    "adminPassword": "",
+    "demoContent": true
+  },
+  "search": {
+    "pdftotext": "pdftotext",
+    "extractTimeoutSeconds": 60
+  }
+}

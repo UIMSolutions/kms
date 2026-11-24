@@ -1,0 +1,55 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form" xmlns:u="sap.ui.unified">
+	<Dialog id="documentDialog" title="{doc>/title}" contentWidth="56rem" resizable="true" draggable="true"
+		afterClose=".onDocumentClosed">
+		<IconTabBar id="docTabs" expandable="false" stretchContentHeight="false">
+			<items>
+				<IconTabFilter text="{i18n>article.preview}" key="preview" icon="sap-icon://show">
+					<VBox id="previewBox" alignItems="Center" busy="{doc>/previewBusy}">
+						<Text text="{i18n>document.previewNotAvailable}" visible="{= !${doc>/previewHtml} }"
+							class="sapUiSmallMargin"/>
+						<core:HTML content="{doc>/previewHtml}" sanitizeContent="false"/>
+					</VBox>
+				</IconTabFilter>
+				<IconTabFilter text="{i18n>document.details}" key="details" icon="sap-icon://hint">
+					<f:SimpleForm editable="{doc>/canEdit}" layout="ResponsiveGridLayout" labelSpanM="3">
+						<Label text="{i18n>common.title}"/>
+						<Input value="{doc>/edit/title}" editable="{doc>/canEdit}" maxLength="200"/>
+						<Label text="{i18n>common.space}"/>
+						<Select selectedKey="{doc>/edit/spaceId}" items="{spaces>/withAll}" forceSelection="false"
+							enabled="{doc>/canEdit}" width="100%">
+							<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>name} : ${i18n>common.noSpace} }"/>
+						</Select>
+						<Label text="{i18n>common.tags}"/>
+						<Input value="{doc>/edit/tags}" editable="{doc>/canEdit}" placeholder="{i18n>common.tagsHint}"/>
+						<Label text="{i18n>common.description}"/>
+						<TextArea value="{doc>/edit/description}" editable="{doc>/canEdit}" rows="3" width="100%"/>
+						<Label text="{i18n>document.fileName}"/>
+						<Text text="{doc>/fileName} ({doc>/mimeType}, {path: 'doc>/size', formatter: '.formatter.fileSize'})"/>
+						<Label text="{i18n>common.created}"/>
+						<Text text="{path: 'doc>/createdAt', formatter: '.formatter.dateTime'} {i18n>common.by} {doc>/uploadedByName}"/>
+						<Label text="{i18n>common.updated}"/>
+						<Text text="{path: 'doc>/updatedAt', formatter: '.formatter.dateTime'}"/>
+						<Label text="{i18n>document.downloads}"/>
+						<Text text="{doc>/downloads}"/>
+						<Label text="{i18n>nav.search}"/>
+						<ObjectStatus text="{= ${doc>/textExtracted} ? ${doc>/textInfo} : ${i18n>document.textNotIndexed} }"
+							state="{= ${doc>/textExtracted} ? 'Success' : 'None' }"/>
+						<Label text="{i18n>document.checksum}"/>
+						<Text text="{doc>/sha256}" wrapping="true"/>
+					</f:SimpleForm>
+				</IconTabFilter>
+			</items>
+		</IconTabBar>
+		<footer>
+			<OverflowToolbar>
+				<ToolbarSpacer/>
+				<Button type="Emphasized" text="{i18n>common.save}" press=".onSaveDocument" visible="{doc>/canEdit}"/>
+				<Button icon="sap-icon://download" text="{i18n>common.download}" press=".onDownload"/>
+				<u:FileUploader buttonOnly="true" buttonText="{i18n>document.replace}" icon="sap-icon://upload"
+					sameFilenameAllowed="true" change=".onReplaceFile" visible="{doc>/canEdit}"/>
+				<Button icon="sap-icon://delete" text="{i18n>common.delete}" press=".onDeleteDocument" visible="{doc>/canDelete}"/>
+				<Button text="{i18n>common.close}" press=".onCloseDocument"/>
+			</OverflowToolbar>
+		</footer>
+	</Dialog>
+</core:FragmentDefinition>

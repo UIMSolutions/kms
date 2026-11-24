@@ -1,0 +1,40 @@
+<mvc:View
+	controllerName="uim.myfiori.kms.controller.Admin"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:f="sap.ui.layout.form">
+	<Page title="{i18n>nav.admin}">
+		<headerContent>
+			<Button icon="sap-icon://synchronize" text="{i18n>admin.reindex}" press=".onReindex"/>
+			<Button icon="sap-icon://refresh" tooltip="{i18n>common.refresh}" press=".onRefresh"/>
+		</headerContent>
+		<f:SimpleForm title="{i18n>admin.metrics}" layout="ColumnLayout" columnsM="2" columnsL="3" editable="false">
+			<Label text="{i18n>admin.requests}"/><Text text="{admin>/metrics/requests}"/>
+			<Label text="{i18n>admin.avgMillis}"/><Text text="{= Math.round(${admin>/metrics/avgMillis} * 10) / 10 }"/>
+			<Label text="{i18n>admin.uptime}"/><Text text="{admin>/metrics/uptimeSeconds}"/>
+			<Label text="{i18n>admin.uploads}"/><Text text="{admin>/metrics/uploads} ({path: 'admin>/metrics/uploadBytes', formatter: '.formatter.fileSize'})"/>
+			<Label text="{i18n>admin.searches}"/><Text text="{admin>/metrics/searches}"/>
+			<Label text="{i18n>admin.pending}"/><Text text="{admin>/metrics/pendingTextExtractions}"/>
+			<Label text="{i18n>home.storage}"/><Text text="{path: 'admin>/stats/storageBytes', formatter: '.formatter.fileSize'}"/>
+			<Label text="{i18n>home.index}"/><Text text="{admin>/stats/indexedItems} / {admin>/stats/vocabulary}"/>
+		</f:SimpleForm>
+		<Table headerText="{i18n>admin.audit}" items="{admin>/audit}" class="sapUiResponsiveContentPadding" growing="true" growingThreshold="50">
+			<columns>
+				<Column width="12rem"><Text text="{i18n>admin.time}"/></Column>
+				<Column><Text text="{i18n>admin.event}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>admin.actor}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>admin.detail}"/></Column>
+			</columns>
+			<items>
+				<ColumnListItem>
+					<cells>
+						<Text text="{path: 'admin>at', formatter: '.formatter.dateTime'}"/>
+						<ObjectStatus text="{admin>type}" state="{= ${admin>type}.indexOf('failed') >= 0 ? 'Error' : (${admin>type}.indexOf('deleted') >= 0 ? 'Warning' : 'None') }"/>
+						<Text text="{admin>actorName}"/>
+						<Text text="{admin>detail}"/>
+					</cells>
+				</ColumnListItem>
+			</items>
+		</Table>
+	</Page>
+</mvc:View>

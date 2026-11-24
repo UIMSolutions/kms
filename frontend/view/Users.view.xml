@@ -1,0 +1,54 @@
+<mvc:View
+	controllerName="uim.myfiori.kms.controller.Users"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core">
+	<Page title="{i18n>nav.users}">
+		<headerContent>
+			<Button icon="sap-icon://add-employee" text="{i18n>user.new}" type="Emphasized" press=".onNew"/>
+		</headerContent>
+		<Table id="userTable" items="{users>/items}" class="sapUiResponsiveContentPadding" sticky="ColumnHeaders,HeaderToolbar">
+			<headerToolbar>
+				<OverflowToolbar>
+					<SearchField id="userFilter" width="16rem" placeholder="{i18n>user.searchPlaceholder}" search=".onFilter"/>
+					<ToolbarSpacer/>
+					<Text text="{users>/total}"/>
+					<Button icon="sap-icon://refresh" tooltip="{i18n>common.refresh}" press=".onFilter"/>
+				</OverflowToolbar>
+			</headerToolbar>
+			<columns>
+				<Column><Text text="{i18n>user.username}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>user.email}"/></Column>
+				<Column><Text text="{i18n>user.role}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>common.status}"/></Column>
+				<Column minScreenWidth="Desktop" demandPopin="true"><Text text="{i18n>user.lastLogin}"/></Column>
+				<Column width="10rem" hAlign="End"/>
+			</columns>
+			<items>
+				<ColumnListItem>
+					<cells>
+						<ObjectIdentifier title="{users>displayName}" text="{users>username}"/>
+						<Text text="{users>email}"/>
+						<ObjectStatus text="{path: 'users>role', formatter: '.formatter.roleText'}"
+							state="{path: 'users>role', formatter: '.formatter.roleState'}"/>
+						<VBox>
+							<ObjectStatus text="{= ${users>active} ? ${i18n>user.active} : '–' }" state="{= ${users>active} ? 'Success' : 'None' }"/>
+							<ObjectStatus text="{i18n>user.locked}" state="Error" icon="sap-icon://locked" visible="{users>locked}"/>
+							<ObjectStatus text="{i18n>user.external}" visible="{users>external}"/>
+						</VBox>
+						<Text text="{path: 'users>lastLoginAt', formatter: '.formatter.relative'}"/>
+						<HBox justifyContent="End">
+							<Button icon="sap-icon://unlocked" type="Transparent" tooltip="{i18n>user.unlock}" press=".onUnlock"
+								visible="{users>locked}"/>
+							<Button icon="sap-icon://key" type="Transparent" tooltip="{i18n>user.resetPassword}" press=".onResetPassword"
+								visible="{= !${users>external} }"/>
+							<Button icon="sap-icon://edit" type="Transparent" tooltip="{i18n>common.edit}" press=".onEdit"/>
+							<Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>common.delete}" press=".onDelete"
+								enabled="{= ${users>id} !== ${session>/user/id} }"/>
+						</HBox>
+					</cells>
+				</ColumnListItem>
+			</items>
+		</Table>
+	</Page>
+</mvc:View>

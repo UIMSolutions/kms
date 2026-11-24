@@ -1,0 +1,85 @@
+_schema-version: "3.2"
+ID: uim-kms
+version: 1.0.0
+description: Knowledge management system - vibe.d backend, SAP Fiori 3 / OpenUI5 frontend, approuter (SAP BTP)
+
+parameters:
+  enable-parallel-deployments: true
+
+modules:
+  # ---------------------------------------------------------------- backend (D / vibe.d)
+  - name: kms-backend
+    type: custom
+    path: backend
+    build-parameters:
+      builder: custom
+      commands:
+        - dub build -b release --compiler=ldc2
+      build-result: .
+      ignore: ["source/", "tests/", ".dub/", "data/"]
+    parameters:
+      buildpack: binary_buildpack
+      command: ./build/kms-backend
+      memory: 512M
+      disk-quota: 2G
+      health-check-type: http
+      health-check-http-endpoint: /healthz
+    properties:
+      KMS_AUTH_MODE: xsuaa
+      KMS_LOG_LEVEL: info
+      KMS_FRONTEND_DIR: ""
+      # Cloud Foundry containers have an ephemeral disk: mount a volume service
+      # (e.g. NFS) and point KMS_DATA_DIR at it. KMS_TOKEN_SECRET / KMS_ADMIN_PASSWORD
+      # come from 'cf set-env' or a user-provided service tagged "kms-config".
+      KMS_DATA_DIR: data
+    requires:
+      - name: kms-uaa
+    provides:
+      - name: kms-backend-api
+        properties:
+          url: ${default-url}
+
+  # ---------------------------------------------------------------- frontend (static OpenUI5 app)
+  - name: kms-frontend
+    type: custom
+    path: frontend
+    build-parameters:
+      builder: custom
+      commands: []
+      build-result: .
+      ignore: ["node_modules/", "test/", "localService/", "dist/"]
+      supported-platforms: []
+
+  # ---------------------------------------------------------------- approuter (single entry point)
+  - name: kms-approuter
+    type: approuter.nodejs
+    path: approuter
+    parameters:
+      memory: 256M
+      disk-quota: 512M
+    build-parameters:
+      ignore: ["default-env.json", "node_modules/"]
+      requires:
+        - name: kms-frontend
+          artifacts: ["."]
+          target-path: resources/
+    requires:
+      - name: kms-uaa
+      - name: kms-backend-api
+        group: destinations
+        properties:
+          name: kms-backend
+          url: ~{url}
+          forwardAuthToken: true
+          timeout: 120000
+
+resources:
+  - name: kms-uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: approuter/xs-security.json
+      config:
+        xsappname: kms-${space}
+        tenant-mode: dedicated

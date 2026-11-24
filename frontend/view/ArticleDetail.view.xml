@@ -1,0 +1,48 @@
+<mvc:View
+	controllerName="uim.myfiori.kms.controller.ArticleDetail"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core">
+	<Page title="{article>/title}" showNavButton="true" navButtonPress=".onNavBack">
+		<headerContent>
+			<Button icon="sap-icon://edit" text="{i18n>common.edit}" press=".onEdit" visible="{article>/canEdit}"/>
+			<Button text="{i18n>article.publish}" type="Accept" press=".onAction" visible="{= ${article>/canEdit} &amp;&amp; ${article>/status} !== 'published' }"
+				app:action="publish" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"/>
+			<Button text="{i18n>article.archive}" press=".onAction" visible="{= ${article>/canEdit} &amp;&amp; ${article>/status} === 'published' }"
+				app:action="archive" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"/>
+			<Button text="{i18n>article.reopen}" press=".onAction" visible="{= ${article>/canEdit} &amp;&amp; ${article>/status} !== 'draft' }"
+				app:action="reopen" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"/>
+			<Button icon="sap-icon://history" tooltip="{i18n>article.history}" press=".onHistory" visible="{article>/canEdit}"/>
+			<Button icon="sap-icon://delete" tooltip="{i18n>common.delete}" press=".onDelete" visible="{article>/canDelete}"/>
+		</headerContent>
+		<ObjectHeader title="{article>/title}" responsive="true" backgroundDesign="Transparent"
+			number="{parts: ['i18n>article.version', 'article>/version'], formatter: '.formatMessage'}">
+			<statuses>
+				<ObjectStatus text="{path: 'article>/status', formatter: '.formatter.statusText'}"
+					state="{path: 'article>/status', formatter: '.formatter.statusState'}"/>
+				<ObjectStatus text="{parts: ['i18n>article.views', 'article>/views'], formatter: '.formatMessage'}"/>
+			</statuses>
+			<attributes>
+				<ObjectAttribute title="{i18n>common.space}" text="{article>/spaceName}" active="true" press=".onSpace"/>
+				<ObjectAttribute title="{i18n>article.author}" text="{article>/authorName}"/>
+				<ObjectAttribute title="{i18n>common.updated}"
+					text="{path: 'article>/updatedAt', formatter: '.formatter.dateTime'} {i18n>common.by} {article>/updatedByName}"/>
+				<ObjectAttribute title="{i18n>article.published}" text="{path: 'article>/publishedAt', formatter: '.formatter.dateTime'}"
+					visible="{= !!${article>/publishedAt} }"/>
+			</attributes>
+		</ObjectHeader>
+		<VBox class="sapUiMediumMarginBeginEnd sapUiSmallMarginTop sapUiMediumMarginBottom">
+			<FlexBox wrap="Wrap" items="{article>/tags}" class="sapUiTinyMarginBottom">
+				<Button text="#{article>}" type="Transparent" press=".onTag" class="sapUiTinyMarginEnd"/>
+			</FlexBox>
+			<Text text="{article>/summary}" visible="{= !!${article>/summary} }" class="sapUiSmallMarginBottom"/>
+			<core:HTML content="{path: 'article>/body', formatter: '.formatter.markdown'}" sanitizeContent="true"/>
+			<List headerText="{i18n>article.attachments}" items="{article>/attachments}" noDataText="{i18n>article.noAttachments}"
+				class="sapUiMediumMarginTop" visible="{= ${article>/attachments}.length > 0 }">
+				<StandardListItem title="{article>title}" description="{article>fileName}"
+					icon="{parts: [{value: 'document'}, 'article>kind'], formatter: '.formatter.kindIcon'}"
+					info="{path: 'article>size', formatter: '.formatter.fileSize'}" type="Active" press=".onAttachment"/>
+			</List>
+		</VBox>
+	</Page>
+</mvc:View>

@@ -1,0 +1,4 @@
+[
+	{ "id": "a1", "spaceId": "s1", "spaceName": "General", "title": "Welcome to the Knowledge Base", "summary": "Getting started", "status": "published", "authorName": "Administrator", "views": 12 },
+	{ "id": "a2", "spaceId": "s2", "spaceName": "IT & Tools", "title": "VPN access for remote work", "summary": "Install and configure the VPN client", "status": "published", "authorName": "Administrator", "views": 5 }
+]

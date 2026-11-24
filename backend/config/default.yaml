@@ -1,0 +1,5 @@
+# Optional YAML overlay - values here override default.json.
+# config/local.json / config/local.yaml (git-ignored) override both,
+# KMS_* environment variables and VCAP_SERVICES override everything.
+log:
+  level: info

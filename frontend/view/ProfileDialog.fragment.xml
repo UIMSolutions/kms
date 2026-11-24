@@ -1,0 +1,14 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form">
+	<Dialog id="profileDialog" title="{i18n>user.profile}" contentWidth="26rem">
+		<f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanM="4">
+			<Label text="{i18n>user.username}"/>
+			<Text text="{session>/user/username}"/>
+			<Label text="{i18n>user.displayName}"/>
+			<Input id="profileDisplayName" maxLength="100"/>
+			<Label text="{i18n>user.email}"/>
+			<Input id="profileEmail" type="Email" maxLength="254"/>
+		</f:SimpleForm>
+		<beginButton><Button type="Emphasized" text="{i18n>common.save}" press=".onSaveProfile"/></beginButton>
+		<endButton><Button text="{i18n>common.cancel}" press=".onCloseProfile"/></endButton>
+	</Dialog>
+</core:FragmentDefinition>

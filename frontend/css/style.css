@@ -1,0 +1,26 @@
+html, body, body > div { height: 100%; margin: 0; }
+
+/* rendered Markdown */
+.kmsMarkdown { line-height: 1.55; max-width: 60rem; }
+.kmsMarkdown h1 { font-size: 1.6rem; margin: 1rem 0 .5rem; }
+.kmsMarkdown h2 { font-size: 1.3rem; margin: 1rem 0 .4rem; }
+.kmsMarkdown h3 { font-size: 1.1rem; margin: .8rem 0 .3rem; }
+.kmsMarkdown p { margin: .4rem 0; }
+.kmsMarkdown code { font-family: monospace; background: var(--sapNeutralBackground, #f4f4f4); padding: 0 .25rem; border-radius: .2rem; }
+.kmsMarkdown pre { background: var(--sapNeutralBackground, #f4f4f4); padding: .75rem; overflow: auto; border-radius: .25rem; }
+.kmsMarkdown pre code { background: none; padding: 0; }
+.kmsMarkdown blockquote { border-left: 4px solid var(--sapHighlightColor, #0a6ed1); margin: .5rem 0; padding: .25rem .75rem; color: var(--sapContent_LabelColor, #6a6d70); }
+.kmsMarkdown table { border-collapse: collapse; margin: .5rem 0; }
+.kmsMarkdown th, .kmsMarkdown td { border: 1px solid var(--sapList_BorderColor, #e5e5e5); padding: .3rem .6rem; text-align: left; }
+.kmsMarkdown th { background: var(--sapList_HeaderBackground, #f7f7f7); }
+.kmsMarkdown img { max-width: 100%; }
+
+/* search */
+.kmsSnippet strong { background: var(--sapHighlightColor, #0a6ed1); color: var(--sapContent_ContrastTextColor, #fff); padding: 0 .1rem; border-radius: .15rem; font-weight: normal; }
+.kmsFacets { min-width: 15rem; max-width: 17rem; }
+.kmsHeroSearch { max-width: 44rem; }
+.kmsPreview { max-width: 100%; max-height: 60vh; }
+.kmsPreviewFrame { width: 100%; height: 60vh; border: none; }
+.kmsLoginBox { max-width: 24rem; width: 100%; }
+.kmsDropZone { border: 2px dashed var(--sapField_BorderColor, #89919a); border-radius: .5rem; padding: 1.5rem; text-align: center; }
+.kmsDropZone.kmsDragOver { border-color: var(--sapHighlightColor, #0a6ed1); background: var(--sapList_SelectionBackgroundColor, #e5f0fa); }

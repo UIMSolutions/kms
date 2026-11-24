@@ -1,0 +1,8 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+	<SelectDialog id="documentPicker" title="{i18n>article.addAttachment}" items="{picker>/items}" multiSelect="true"
+		search=".onPickerSearch" liveChange=".onPickerSearch" confirm=".onPickerConfirm" growing="false">
+		<StandardListItem title="{picker>title}" description="{picker>fileName} · {picker>spaceName}"
+			info="{path: 'picker>size', formatter: '.formatter.fileSize'}"
+			icon="{parts: [{value: 'document'}, 'picker>kind'], formatter: '.formatter.kindIcon'}"/>
+	</SelectDialog>
+</core:FragmentDefinition>

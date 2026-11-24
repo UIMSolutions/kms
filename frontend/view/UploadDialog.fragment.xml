@@ -1,0 +1,40 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form"
+	xmlns:u="sap.ui.unified" xmlns:dnd="sap.ui.core.dnd">
+	<Dialog id="uploadDialog" title="{i18n>document.uploadTitle}" contentWidth="34rem" afterClose=".onUploadClosed">
+		<VBox class="sapUiSmallMargin">
+			<VBox class="kmsDropZone" alignItems="Center">
+				<dragDropConfig>
+					<dnd:DropInfo drop=".onDropIntoDialog"/>
+				</dragDropConfig>
+				<core:Icon src="sap-icon://upload-to-cloud" size="2.5rem"/>
+				<Text text="{i18n>document.dropHere}" class="sapUiSmallMarginTop sapUiSmallMarginBottom"/>
+				<u:FileUploader id="fileChooser" buttonOnly="true" buttonText="{i18n>document.choose}" multiple="true"
+					sameFilenameAllowed="true" change=".onFilesChosen"/>
+			</VBox>
+			<List items="{upload>/files}" mode="Delete" delete=".onRemovePending" class="sapUiSmallMarginTop"
+				visible="{= ${upload>/files}.length > 0 }">
+				<StandardListItem title="{upload>name}" info="{path: 'upload>size', formatter: '.formatter.fileSize'}"
+					icon="sap-icon://document"/>
+			</List>
+			<f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanM="3">
+				<Label text="{i18n>common.space}"/>
+				<Select selectedKey="{upload>/spaceId}" items="{spaces>/withAll}" forceSelection="false" width="100%">
+					<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>name} : ${i18n>common.noSpace} }"/>
+				</Select>
+				<Label text="{i18n>common.title}"/>
+				<Input value="{upload>/title}" placeholder="{upload>/titlePlaceholder}" enabled="{= ${upload>/files}.length &lt;= 1 }"/>
+				<Label text="{i18n>common.tags}"/>
+				<Input value="{upload>/tags}" placeholder="{i18n>common.tagsHint}"/>
+				<Label text="{i18n>common.description}"/>
+				<TextArea value="{upload>/description}" rows="2" width="100%"/>
+			</f:SimpleForm>
+			<ProgressIndicator percentValue="{upload>/progress}" displayValue="{upload>/progressText}"
+				visible="{upload>/busy}" state="Information"/>
+		</VBox>
+		<beginButton>
+			<Button type="Emphasized" text="{i18n>document.upload}" press=".onStartUpload"
+				enabled="{= ${upload>/files}.length > 0 &amp;&amp; !${upload>/busy} }"/>
+		</beginButton>
+		<endButton><Button text="{i18n>common.cancel}" press=".onCloseUpload" enabled="{= !${upload>/busy} }"/></endButton>
+	</Dialog>
+</core:FragmentDefinition>

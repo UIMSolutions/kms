@@ -1,0 +1,23 @@
+{
+  "xsappname": "kms",
+  "tenant-mode": "dedicated",
+  "description": "Knowledge management system",
+  "scopes": [
+    { "name": "$XSAPPNAME.Reader", "description": "Read and search published knowledge" },
+    { "name": "$XSAPPNAME.Editor", "description": "Create and edit articles, upload documents and media" },
+    { "name": "$XSAPPNAME.Admin", "description": "Manage users, spaces and the search index" }
+  ],
+  "role-templates": [
+    { "name": "Reader", "description": "Knowledge reader", "scope-references": ["$XSAPPNAME.Reader"] },
+    { "name": "Editor", "description": "Knowledge editor", "scope-references": ["$XSAPPNAME.Reader", "$XSAPPNAME.Editor"] },
+    { "name": "Admin", "description": "KMS administrator", "scope-references": ["$XSAPPNAME.Reader", "$XSAPPNAME.Editor", "$XSAPPNAME.Admin"] }
+  ],
+  "role-collections": [
+    { "name": "KMS_Reader", "role-template-references": ["$XSAPPNAME.Reader"] },
+    { "name": "KMS_Editor", "role-template-references": ["$XSAPPNAME.Editor"] },
+    { "name": "KMS_Admin", "role-template-references": ["$XSAPPNAME.Admin"] }
+  ],
+  "oauth2-configuration": {
+    "redirect-uris": ["https://*.cfapps.*.hana.ondemand.com/**", "http://localhost:5000/**"]
+  }
+}
