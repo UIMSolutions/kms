@@ -55,7 +55,7 @@ sap.ui.define([
 
 		onSpace: function (oEvent) {
 			var sId = oEvent.getSource().getBindingContext("spaces").getProperty("id");
-			this.navTo("articles", { query: { space: sId } });
+			this.navTo("space", { id: sId });
 		}
 	});
 });

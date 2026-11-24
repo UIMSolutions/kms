@@ -17,9 +17,9 @@
 					icon="sap-icon://document"/>
 			</List>
 			<f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanM="3">
-				<Label text="{i18n>common.space}"/>
-				<Select selectedKey="{upload>/spaceId}" items="{spaces>/withAll}" forceSelection="false" width="100%">
-					<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>name} : ${i18n>common.noSpace} }"/>
+				<Label text="{i18n>common.space}" required="true"/>
+				<Select selectedKey="{upload>/spaceId}" items="{spaces>/writable}" forceSelection="true" width="100%">
+					<core:Item key="{spaces>id}" text="{spaces>path}"/>
 				</Select>
 				<Label text="{i18n>common.title}"/>
 				<Input value="{upload>/title}" placeholder="{upload>/titlePlaceholder}" enabled="{= ${upload>/files}.length &lt;= 1 }"/>
@@ -33,7 +33,7 @@
 		</VBox>
 		<beginButton>
 			<Button type="Emphasized" text="{i18n>document.upload}" press=".onStartUpload"
-				enabled="{= ${upload>/files}.length > 0 &amp;&amp; !${upload>/busy} }"/>
+				enabled="{= ${upload>/files}.length > 0 &amp;&amp; !${upload>/busy} &amp;&amp; !!${upload>/spaceId} }"/>
 		</beginButton>
 		<endButton><Button text="{i18n>common.cancel}" press=".onCloseUpload" enabled="{= !${upload>/busy} }"/></endButton>
 	</Dialog>

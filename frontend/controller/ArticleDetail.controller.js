@@ -61,7 +61,7 @@ sap.ui.define([
 		},
 
 		onSpace: function () {
-			this.navTo("articles", { query: { space: this._article().spaceId } });
+			this.navTo("space", { id: this._article().spaceId });
 		},
 
 		onTag: function (oEvent) {

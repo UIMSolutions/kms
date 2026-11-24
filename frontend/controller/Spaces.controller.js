@@ -1,12 +1,10 @@
 sap.ui.define([
-	"./BaseController",
-	"sap/ui/model/json/JSONModel"
-], function (BaseController, JSONModel) {
+	"./BaseController"
+], function (BaseController) {
 	"use strict";
 
 	return BaseController.extend("uim.myfiori.kms.controller.Spaces", {
 		onInit: function () {
-			this.getView().setModel(new JSONModel({}), "space");
 			this.onRoute("spaces", function () {
 				this.getOwnerComponent().loadSpaces();
 			});
@@ -17,6 +15,10 @@ sap.ui.define([
 		},
 
 		onOpen: function (oEvent) {
+			this.navTo("space", { id: this._ctx(oEvent).id });
+		},
+
+		onOpenArticles: function (oEvent) {
 			this.navTo("articles", { query: { space: this._ctx(oEvent).id } });
 		},
 
@@ -25,39 +27,24 @@ sap.ui.define([
 		},
 
 		onNew: function () {
-			this._edit({ id: "", key: "", name: "", description: "", icon: "sap-icon://course-book" });
+			this.editSpace({});
+		},
+
+		onNewSub: function (oEvent) {
+			var o = this._ctx(oEvent);
+			this.editSpace({ parentId: o.id, parentPath: o.path });
 		},
 
 		onEdit: function (oEvent) {
-			this._edit(Object.assign({}, this._ctx(oEvent)));
-		},
-
-		_edit: function (o) {
-			this.getView().getModel("space").setData(o);
-			this.dialog("SpaceDialog").then(function (d) { d.open(); });
-		},
-
-		onSave: function () {
-			var o = this.getView().getModel("space").getData();
-			var oBody = { key: o.key, name: o.name, description: o.description, icon: o.icon };
-			var p = o.id ? this.api.patch("spaces/" + o.id, oBody) : this.api.post("spaces", oBody);
-			p.then(function () {
-				this.byId("spaceDialog").close();
-				this.toast("common.saved");
-				this.getOwnerComponent().loadSpaces();
-			}.bind(this)).catch(this.showError.bind(this));
-		},
-
-		onCancel: function () {
-			this.byId("spaceDialog").close();
+			this.editSpace(Object.assign({}, this._ctx(oEvent)));
 		},
 
 		onDelete: function (oEvent) {
 			var o = this._ctx(oEvent);
-			this.confirmDelete(o.name, function () {
+			this.confirmDelete(o.path, function () {
 				this.api.del("spaces/" + o.id).then(function () {
 					this.toast("common.deleted");
-					this.getOwnerComponent().loadSpaces();
+					this.getOwnerComponent().refreshSession();
 				}.bind(this)).catch(this.showError.bind(this));
 			}.bind(this));
 		}

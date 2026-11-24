@@ -39,7 +39,7 @@ sap.ui.define([
 		},
 
 		onNew: function () {
-			this._edit({ id: "", username: "", displayName: "", email: "", role: "reader", active: true, password: "", mustChangePassword: true });
+			this._edit({ id: "", username: "", displayName: "", email: "", role: "user", active: true, password: "", mustChangePassword: true });
 		},
 
 		onEdit: function (oEvent) {
@@ -73,6 +73,53 @@ sap.ui.define([
 
 		onCancel: function () {
 			this.byId("userDialog").close();
+		},
+
+		// ---- areas & roles of a user
+		onAssignments: function (oEvent) {
+			var o = this._ctx(oEvent);
+			this._assignUser = o;
+			var oModel = this._viewModel("assign");
+			oModel.setData({ user: o, items: [], spaceId: "", role: "reader" });
+			this._loadAssignments().then(function () {
+				return this.dialog("AssignmentsDialog");
+			}.bind(this)).then(function (d) { d.open(); }).catch(this.showError.bind(this));
+		},
+
+		_loadAssignments: function () {
+			var oModel = this.getView().getModel("assign");
+			return this.api.get("users/" + this._assignUser.id + "/assignments").then(function (o) {
+				oModel.setProperty("/items", o.items);
+			});
+		},
+
+		onAssign: function () {
+			var o = this.getView().getModel("assign").getData();
+			if (!o.spaceId) {
+				return;
+			}
+			this.api.put("spaces/" + o.spaceId + "/members/" + this._assignUser.id, { role: o.role }).then(function () {
+				this.toast("common.saved");
+				return this._loadAssignments();
+			}.bind(this)).catch(this.showError.bind(this));
+		},
+
+		onUnassign: function (oEvent) {
+			var a = oEvent.getSource().getBindingContext("assign").getObject();
+			this.api.del("spaces/" + a.spaceId + "/members/" + this._assignUser.id).then(function () {
+				this.toast("area.memberRemoved");
+				return this._loadAssignments();
+			}.bind(this)).catch(this.showError.bind(this));
+		},
+
+		onOpenAssignedArea: function (oEvent) {
+			var a = oEvent.getSource().getBindingContext("assign").getObject();
+			this.byId("assignmentsDialog").close();
+			this.navTo("space", { id: a.spaceId });
+		},
+
+		onCloseAssignments: function () {
+			this.byId("assignmentsDialog").close();
 		},
 
 		onUnlock: function (oEvent) {

@@ -1,0 +1,24 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form">
+	<Dialog id="addMemberDialog" title="{i18n>area.addMember}" contentWidth="30rem">
+		<f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanM="4">
+			<Label text="{i18n>area.memberRole}"/>
+			<SegmentedButton selectedKey="{add>/role}">
+				<items>
+					<SegmentedButtonItem key="reader" text="{i18n>spaceRole.reader}"/>
+					<SegmentedButtonItem key="editor" text="{i18n>spaceRole.editor}"/>
+				</items>
+			</SegmentedButton>
+			<Label text="{i18n>nav.users}" required="true"/>
+			<VBox>
+				<Tokenizer tokens="{add>/users}" tokenDelete=".onRemovePicked" width="100%">
+					<Token key="{add>id}" text="{add>displayName}"/>
+				</Tokenizer>
+				<Button icon="sap-icon://person-placeholder" text="{i18n>area.selectUser}" press=".onPickMembers"/>
+			</VBox>
+		</f:SimpleForm>
+		<beginButton>
+			<Button type="Emphasized" text="{i18n>common.save}" press=".onSaveMembers" enabled="{= ${add>/users}.length > 0 }"/>
+		</beginButton>
+		<endButton><Button text="{i18n>common.cancel}" press=".onCancelMembers"/></endButton>
+	</Dialog>
+</core:FragmentDefinition>

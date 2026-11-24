@@ -7,14 +7,16 @@
 			<Input value="{user>/displayName}" maxLength="100"/>
 			<Label text="{i18n>user.email}"/>
 			<Input value="{user>/email}" type="Email" maxLength="254"/>
-			<Label text="{i18n>user.role}" required="true"/>
-			<SegmentedButton selectedKey="{user>/role}">
-				<items>
-					<SegmentedButtonItem key="reader" text="{i18n>role.reader}"/>
-					<SegmentedButtonItem key="editor" text="{i18n>role.editor}"/>
-					<SegmentedButtonItem key="admin" text="{i18n>role.admin}"/>
-				</items>
-			</SegmentedButton>
+			<Label text="{i18n>user.globalRole}" required="true"/>
+			<VBox>
+				<SegmentedButton selectedKey="{user>/role}">
+					<items>
+						<SegmentedButtonItem key="user" text="{i18n>role.user}"/>
+						<SegmentedButtonItem key="admin" text="{i18n>role.admin}"/>
+					</items>
+				</SegmentedButton>
+				<Text text="{i18n>user.globalRoleHint}" class="sapUiTinyMarginTop"/>
+			</VBox>
 			<Label text="{i18n>user.active}"/>
 			<Switch state="{user>/active}"/>
 			<Label text="{i18n>user.initialPassword}" required="true" visible="{= !${user>/id} }"/>

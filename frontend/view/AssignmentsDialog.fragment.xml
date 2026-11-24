@@ -1,0 +1,40 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+	<Dialog id="assignmentsDialog" title="{i18n>area.assignments}: {assign>/user/displayName}" contentWidth="40rem"
+		resizable="true">
+		<Table items="{assign>/items}" noDataText="{i18n>area.noAssignments}">
+			<headerToolbar>
+				<OverflowToolbar>
+					<Select selectedKey="{assign>/spaceId}" items="{spaces>/withAll}" forceSelection="true" width="18rem">
+						<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>path} : ${i18n>area.assign} + ' …' }"/>
+					</Select>
+					<SegmentedButton selectedKey="{assign>/role}">
+						<items>
+							<SegmentedButtonItem key="reader" text="{i18n>spaceRole.reader}"/>
+							<SegmentedButtonItem key="editor" text="{i18n>spaceRole.editor}"/>
+						</items>
+					</SegmentedButton>
+					<Button icon="sap-icon://add" text="{i18n>area.assign}" press=".onAssign" enabled="{= !!${assign>/spaceId} }"/>
+				</OverflowToolbar>
+			</headerToolbar>
+			<columns>
+				<Column><Text text="{i18n>common.space}"/></Column>
+				<Column width="10rem"><Text text="{i18n>area.memberRole}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>common.status}"/></Column>
+				<Column width="3rem" hAlign="End"/>
+			</columns>
+			<items>
+				<ColumnListItem type="Active" press=".onOpenAssignedArea">
+					<cells>
+						<Text text="{assign>spacePath}"/>
+						<ObjectStatus text="{path: 'assign>role', formatter: '.formatter.spaceRoleText'}"
+							state="{path: 'assign>role', formatter: '.formatter.spaceRoleState'}"/>
+						<Text text="{parts: ['assign>source', {value: ''}], formatter: '.formatter.memberSource'}"/>
+						<Button icon="sap-icon://decline" type="Transparent" tooltip="{i18n>area.removeMember}" press=".onUnassign"
+							visible="{= ${assign>source} === 'member' }"/>
+					</cells>
+				</ColumnListItem>
+			</items>
+		</Table>
+		<endButton><Button text="{i18n>common.close}" press=".onCloseAssignments"/></endButton>
+	</Dialog>
+</core:FragmentDefinition>

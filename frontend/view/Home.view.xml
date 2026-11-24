@@ -10,7 +10,7 @@
 			<Text text="{i18n>home.subtitle}" class="sapUiTinyMarginTop"/>
 			<SearchField id="heroSearch" class="kmsHeroSearch sapUiSmallMarginTop" placeholder="{i18n>search.placeholder}"
 				search=".onSearch" width="100%"/>
-			<HBox class="sapUiSmallMarginTop" visible="{session>/isEditor}">
+			<HBox class="sapUiSmallMarginTop" visible="{session>/canCreate}">
 				<Button icon="sap-icon://add-document" text="{i18n>home.newArticle}" type="Emphasized" press=".onNewArticle"
 					class="sapUiTinyMarginEnd"/>
 				<Button icon="sap-icon://upload" text="{i18n>home.upload}" press=".onUpload"/>
@@ -28,7 +28,7 @@
 				xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
 				<TileContent><NumericContent value="{stats>/documents}" icon="sap-icon://attachment" withMargin="false"/></TileContent>
 			</GenericTile>
-			<GenericTile header="{i18n>nav.spaces}" press=".onTile" class="sapUiTinyMargin" frameType="OneByOne" app:route="spaces"
+			<GenericTile header="{i18n>nav.spaces}" subheader="{= ${stats>/managedSpaces} > 0 ? ${stats>/managedSpaces} + ' ' + ${i18n>area.managedByMe} : '' }" press=".onTile" class="sapUiTinyMargin" frameType="OneByOne" app:route="spaces"
 				xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
 				<TileContent><NumericContent value="{stats>/spaces}" icon="sap-icon://course-book" withMargin="false"/></TileContent>
 			</GenericTile>
@@ -58,7 +58,7 @@
 				</FlexBox>
 				<Title text="{i18n>nav.spaces}" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
 				<List items="{spaces>/items}">
-					<StandardListItem title="{spaces>name}" description="{spaces>description}" icon="{spaces>icon}"
+					<StandardListItem title="{spaces>path}" description="{spaces>description}" icon="{spaces>icon}"
 						type="Navigation" press=".onSpace" counter="{spaces>articleCount}"/>
 				</List>
 			</VBox>

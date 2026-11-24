@@ -20,7 +20,7 @@
 				</SearchField>
 				<ToolbarSpacer/>
 				<Button icon="sap-icon://add-document" text="{i18n>home.newArticle}" type="Transparent"
-					visible="{session>/isEditor}" press=".onNewArticle">
+					visible="{session>/canCreate}" press=".onNewArticle">
 					<layoutData><OverflowToolbarLayoutData priority="Low"/></layoutData>
 				</Button>
 				<Avatar initials="{= (${session>/user/displayName} || ${session>/user/username} || '?').substring(0, 2).toUpperCase() }"

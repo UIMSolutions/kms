@@ -7,7 +7,7 @@ sap.ui.define([
 
 	/** routes only administrators may open */
 	var ADMIN_ROUTES = ["users", "admin"];
-	/** routes that need the editor role */
+	/** routes that need the editor role in at least one area */
 	var EDITOR_ROUTES = ["articleNew", "articleEdit"];
 
 	return UIComponent.extend("uim.myfiori.kms.Component", {
@@ -53,8 +53,17 @@ sap.ui.define([
 			var oSpaces = this.getModel("spaces");
 			return api.get("spaces").then(function (o) {
 				oSpaces.setProperty("/items", o.items);
-				oSpaces.setProperty("/withAll", [{ id: "", name: "" }].concat(o.items));
+				oSpaces.setProperty("/withAll", [{ id: "", name: "", path: "" }].concat(o.items));
+				oSpaces.setProperty("/writable", o.items.filter(function (s) { return s.canWrite; }));
 			}).catch(function () { /* handled by api */ });
+		},
+
+		/** reloads own user + area roles (after memberships or managers changed) */
+		refreshSession: function () {
+			return api.me().then(function (oUser) {
+				models.fillSession(this.getModel("session"), oUser);
+				return this.loadSpaces();
+			}.bind(this)).catch(function () {});
 		},
 
 		logout: function () {
@@ -81,7 +90,7 @@ sap.ui.define([
 			}
 			var bDenied = sRoute === "login"
 				|| (ADMIN_ROUTES.indexOf(sRoute) >= 0 && !oSession.getProperty("/isAdmin"))
-				|| (EDITOR_ROUTES.indexOf(sRoute) >= 0 && !oSession.getProperty("/isEditor"));
+				|| (EDITOR_ROUTES.indexOf(sRoute) >= 0 && !oSession.getProperty("/canCreate"));
 			if (bDenied) {
 				setTimeout(function () { oRouter.navTo("home", {}, true); }, 0);
 			}

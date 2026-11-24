@@ -1,0 +1,78 @@
+<mvc:View
+	controllerName="uim.myfiori.kms.controller.AreaDetail"
+	xmlns="sap.m"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core">
+	<Page title="{area>/path}" showNavButton="true" navButtonPress=".onNavBack">
+		<headerContent>
+			<Button icon="sap-icon://document-text" text="{i18n>area.articles}" press=".onArticles"/>
+			<Button icon="sap-icon://attachment" text="{i18n>area.documents}" press=".onDocuments"/>
+			<Button icon="sap-icon://add-folder" text="{i18n>area.newSubArea}" press=".onNewSub" visible="{area>/canManage}"/>
+			<Button icon="sap-icon://edit" tooltip="{i18n>common.edit}" press=".onEdit" visible="{area>/canManage}"/>
+			<Button icon="sap-icon://delete" tooltip="{i18n>common.delete}" press=".onDelete" visible="{area>/canGovern}"/>
+		</headerContent>
+		<ObjectHeader title="{area>/name}" icon="{area>/icon}" responsive="true" backgroundDesign="Transparent"
+			number="{area>/key}">
+			<statuses>
+				<ObjectStatus title="{i18n>area.myRole}" text="{path: 'area>/myRole', formatter: '.formatter.spaceRoleText'}"
+					state="{path: 'area>/myRole', formatter: '.formatter.spaceRoleState'}"/>
+			</statuses>
+			<attributes>
+				<ObjectAttribute title="{i18n>area.path}" text="{area>/path}"/>
+				<ObjectAttribute title="{i18n>area.manager}" text="{area>/managerName}"
+					active="{area>/canGovern}" press=".onChangeManager"/>
+				<ObjectAttribute text="{area>/description}" visible="{= !!${area>/description} }"/>
+			</attributes>
+		</ObjectHeader>
+		<VBox class="sapUiMediumMarginBeginEnd sapUiMediumMarginBottom">
+			<MessageStrip text="{i18n>area.rolesHint}" showIcon="true" class="sapUiSmallMarginBottom" visible="{area>/canManage}"/>
+			<List headerText="{i18n>area.subAreas}" items="{area>/children}" noDataText="{i18n>area.noSubAreas}"
+				class="sapUiSmallMarginBottom">
+				<StandardListItem title="{area>name}" description="{area>description}" icon="{area>icon}" type="Navigation"
+					info="{area>managerName}" press=".onOpenChild"/>
+			</List>
+			<Table id="memberTable" items="{area>/members}" noDataText="{i18n>area.noMembers}">
+				<headerToolbar>
+					<OverflowToolbar>
+						<Title text="{i18n>area.members}"/>
+						<ToolbarSpacer/>
+						<Button icon="sap-icon://add-employee" text="{i18n>area.addMember}" press=".onAddMembers"
+							visible="{area>/canManage}"/>
+						<Button icon="sap-icon://employee-pane" text="{i18n>area.changeManager}" press=".onChangeManager"
+							visible="{area>/canGovern}"/>
+					</OverflowToolbar>
+				</headerToolbar>
+				<columns>
+					<Column><Text text="{i18n>common.name}"/></Column>
+					<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>user.email}"/></Column>
+					<Column width="16rem"><Text text="{i18n>area.memberRole}"/></Column>
+					<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>common.status}"/></Column>
+					<Column width="3rem" hAlign="End"/>
+				</columns>
+				<items>
+					<ColumnListItem>
+						<cells>
+							<ObjectIdentifier title="{area>displayName}" text="{area>username}"/>
+							<Text text="{area>email}"/>
+							<HBox>
+								<SegmentedButton selectedKey="{area>role}" selectionChange=".onRoleChange"
+									visible="{= ${area>/canManage} &amp;&amp; ${area>source} === 'member' }">
+									<items>
+										<SegmentedButtonItem key="reader" text="{i18n>spaceRole.reader}"/>
+										<SegmentedButtonItem key="editor" text="{i18n>spaceRole.editor}"/>
+									</items>
+								</SegmentedButton>
+								<ObjectStatus text="{path: 'area>role', formatter: '.formatter.spaceRoleText'}"
+									state="{path: 'area>role', formatter: '.formatter.spaceRoleState'}"
+									visible="{= !${area>/canManage} || ${area>source} !== 'member' }"/>
+							</HBox>
+							<Text text="{parts: ['area>source', 'area>sourcePath'], formatter: '.formatter.memberSource'}"/>
+							<Button icon="sap-icon://decline" type="Transparent" tooltip="{i18n>area.removeMember}"
+								press=".onRemoveMember" visible="{= ${area>/canManage} &amp;&amp; ${area>source} === 'member' }"/>
+						</cells>
+					</ColumnListItem>
+				</items>
+			</Table>
+		</VBox>
+	</Page>
+</mvc:View>

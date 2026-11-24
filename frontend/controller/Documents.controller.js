@@ -24,7 +24,7 @@ sap.ui.define([
 				this._load(false);
 				if (q.open) {
 					this._openDocument(q.open);
-				} else if (q.upload === "true" && this.session("/isEditor")) {
+				} else if (q.upload === "true" && this.session("/canCreate")) {
 					this.onUpload();
 				}
 			});
@@ -38,6 +38,7 @@ sap.ui.define([
 			this.api.get("documents", {
 				q: this.byId("docFilter").getValue(),
 				space: this.byId("docSpace").getSelectedKey(),
+				deep: "true",
 				kind: this.byId("docKind").getSelectedKey(),
 				orderBy: this.byId("docOrder").getSelectedKey(),
 				skip: aItems.length,
@@ -65,7 +66,9 @@ sap.ui.define([
 		onUpload: function (aFiles) {
 			var oModel = this.getView().getModel("upload");
 			var oData = this._emptyUpload();
-			oData.spaceId = this.byId("docSpace").getSelectedKey();
+			var sSpace = this.byId("docSpace").getSelectedKey();
+			var aWritable = this.getOwnerComponent().getModel("spaces").getProperty("/writable") || [];
+			oData.spaceId = aWritable.some(function (s) { return s.id === sSpace; }) ? sSpace : ((aWritable[0] || {}).id || "");
 			oModel.setData(oData);
 			this._pending = [];
 			if (Array.isArray(aFiles)) {

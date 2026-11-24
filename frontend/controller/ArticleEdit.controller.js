@@ -14,7 +14,7 @@ sap.ui.define([
 			});
 			this.onRoute("articleNew", function (oEvent) {
 				var q = oEvent.getParameter("arguments")["?query"] || {};
-				var aSpaces = this.getOwnerComponent().getModel("spaces").getProperty("/items") || [];
+				var aSpaces = this.getOwnerComponent().getModel("spaces").getProperty("/writable") || [];
 				this._setData({
 					id: "", title: "", summary: "", body: "", tags: [], attachments: [], status: "draft",
 					spaceId: q.space || (aSpaces[0] && aSpaces[0].id) || ""

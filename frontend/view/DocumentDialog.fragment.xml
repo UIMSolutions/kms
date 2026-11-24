@@ -15,10 +15,11 @@
 						<Label text="{i18n>common.title}"/>
 						<Input value="{doc>/edit/title}" editable="{doc>/canEdit}" maxLength="200"/>
 						<Label text="{i18n>common.space}"/>
-						<Select selectedKey="{doc>/edit/spaceId}" items="{spaces>/withAll}" forceSelection="false"
-							enabled="{doc>/canEdit}" width="100%">
-							<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>name} : ${i18n>common.noSpace} }"/>
+						<Select selectedKey="{doc>/edit/spaceId}" items="{spaces>/writable}" forceSelection="false"
+							visible="{doc>/canEdit}" width="100%">
+							<core:Item key="{spaces>id}" text="{spaces>path}"/>
 						</Select>
+						<Text text="{doc>/spaceName}" visible="{= !${doc>/canEdit} }"/>
 						<Label text="{i18n>common.tags}"/>
 						<Input value="{doc>/edit/tags}" editable="{doc>/canEdit}" placeholder="{i18n>common.tagsHint}"/>
 						<Label text="{i18n>common.description}"/>

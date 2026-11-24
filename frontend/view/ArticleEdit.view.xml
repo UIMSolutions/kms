@@ -10,8 +10,8 @@
 			<Label text="{i18n>common.title}" required="true"/>
 			<Input value="{edit>/title}" maxLength="200" valueLiveUpdate="true"/>
 			<Label text="{i18n>common.space}" required="true"/>
-			<Select selectedKey="{edit>/spaceId}" items="{spaces>/items}" forceSelection="false" width="100%">
-				<core:Item key="{spaces>id}" text="{spaces>name}"/>
+			<Select selectedKey="{edit>/spaceId}" items="{spaces>/writable}" forceSelection="false" width="100%">
+				<core:Item key="{spaces>id}" text="{spaces>path}"/>
 			</Select>
 			<Label text="{i18n>article.summary}"/>
 			<TextArea value="{edit>/summary}" rows="2" maxLength="1000" width="100%"/>

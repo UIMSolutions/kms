@@ -1,0 +1,6 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+	<SelectDialog id="userPicker" title="{picker>/title}" items="{picker>/items}" multiSelect="{picker>/multi}"
+		search=".onUserPickerSearch" liveChange=".onUserPickerSearch" confirm=".onUserPickerConfirm" growing="false">
+		<StandardListItem title="{picker>displayName}" description="{picker>username} {picker>email}" icon="sap-icon://person-placeholder"/>
+	</SelectDialog>
+</core:FragmentDefinition>

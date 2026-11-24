@@ -9,24 +9,35 @@
 		</headerContent>
 		<Table items="{spaces>/items}" noDataText="{i18n>space.empty}" class="sapUiResponsiveContentPadding">
 			<columns>
-				<Column width="3rem"/>
-				<Column><Text text="{i18n>common.name}"/></Column>
-				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>space.key}"/></Column>
-				<Column minScreenWidth="Tablet" demandPopin="true" hAlign="End"><Text text="{i18n>space.articles}"/></Column>
-				<Column minScreenWidth="Tablet" demandPopin="true" hAlign="End"><Text text="{i18n>space.documents}"/></Column>
-				<Column width="7rem" hAlign="End" visible="{session>/isAdmin}"/>
+				<Column width="40%"><Text text="{i18n>common.name}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>area.manager}"/></Column>
+				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>area.myRole}"/></Column>
+				<Column minScreenWidth="Desktop" demandPopin="true" hAlign="End"><Text text="{i18n>area.memberCount}"/></Column>
+				<Column minScreenWidth="Desktop" demandPopin="true" hAlign="End"><Text text="{i18n>space.articles}"/></Column>
+				<Column minScreenWidth="Desktop" demandPopin="true" hAlign="End"><Text text="{i18n>space.documents}"/></Column>
+				<Column width="8rem" hAlign="End"/>
 			</columns>
 			<items>
 				<ColumnListItem type="Navigation" press=".onOpen">
 					<cells>
-						<core:Icon src="{spaces>icon}" size="1.25rem"/>
-						<ObjectIdentifier title="{spaces>name}" text="{spaces>description}"/>
-						<Text text="{spaces>key}"/>
-						<Link text="{spaces>articleCount}" press=".onOpen"/>
+						<HBox alignItems="Center">
+							<Label width="{path: 'spaces>depth', formatter: '.formatter.indent'}" visible="{= ${spaces>depth} > 1 }"/>
+							<core:Icon src="{spaces>icon}" size="1.25rem" class="sapUiSmallMarginEnd"/>
+							<ObjectIdentifier title="{spaces>name}" text="{spaces>key} · {spaces>description}"/>
+						</HBox>
+						<Text text="{spaces>managerName}"/>
+						<ObjectStatus text="{path: 'spaces>myRole', formatter: '.formatter.spaceRoleText'}"
+							state="{path: 'spaces>myRole', formatter: '.formatter.spaceRoleState'}"/>
+						<Text text="{spaces>memberCount}"/>
+						<Link text="{spaces>articleCount}" press=".onOpenArticles"/>
 						<Link text="{spaces>documentCount}" press=".onOpenDocuments"/>
 						<HBox justifyContent="End">
-							<Button icon="sap-icon://edit" type="Transparent" tooltip="{i18n>common.edit}" press=".onEdit"/>
-							<Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>common.delete}" press=".onDelete"/>
+							<Button icon="sap-icon://add-folder" type="Transparent" tooltip="{i18n>area.newSubArea}" press=".onNewSub"
+								visible="{spaces>canManage}"/>
+							<Button icon="sap-icon://edit" type="Transparent" tooltip="{i18n>common.edit}" press=".onEdit"
+								visible="{spaces>canManage}"/>
+							<Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>common.delete}" press=".onDelete"
+								visible="{spaces>canGovern}"/>
 						</HBox>
 					</cells>
 				</ColumnListItem>

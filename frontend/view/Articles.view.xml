@@ -6,7 +6,7 @@
 	<Page title="{i18n>nav.articles}">
 		<headerContent>
 			<Button icon="sap-icon://add-document" text="{i18n>article.new}" type="Emphasized" press=".onNew"
-				visible="{session>/isEditor}"/>
+				visible="{session>/canCreate}"/>
 		</headerContent>
 		<Table id="articleTable" items="{list>/items}" noDataText="{i18n>article.empty}" sticky="ColumnHeaders,HeaderToolbar"
 			growing="false" class="sapUiResponsiveContentPadding">
@@ -14,9 +14,9 @@
 				<OverflowToolbar>
 					<SearchField id="articleFilter" width="16rem" placeholder="{i18n>article.searchPlaceholder}" search=".onFilter"/>
 					<Select id="articleSpace" selectedKey="" change=".onFilter" items="{spaces>/withAll}" forceSelection="true">
-						<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>name} : ${i18n>common.all} + ' ' + ${i18n>nav.spaces} }"/>
+						<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>path} : ${i18n>area.all} }"/>
 					</Select>
-					<Select id="articleStatus" selectedKey="" change=".onFilter" visible="{session>/isEditor}">
+					<Select id="articleStatus" selectedKey="" change=".onFilter" visible="{session>/canCreate}">
 						<core:Item key="" text="{i18n>common.all}"/>
 						<core:Item key="published" text="{i18n>status.published}"/>
 						<core:Item key="draft" text="{i18n>status.draft}"/>

@@ -1,16 +1,26 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form">
-	<Dialog id="spaceDialog" title="{= ${space>/id} ? ${i18n>space.edit} : ${i18n>space.new} }" contentWidth="30rem">
-		<f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanM="3">
+	<Dialog id="spaceDialog" title="{= ${space>/id} ? ${i18n>space.edit} : (${space>/parentId} ? ${i18n>area.newSubArea} : ${i18n>space.new}) }"
+		contentWidth="32rem">
+		<f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanM="4">
+			<Label text="{i18n>area.parent}"/>
+			<Select selectedKey="{space>/parentId}" items="{space>/parents}" width="100%" forceSelection="false"
+				enabled="{space>/canMove}">
+				<core:Item key="{space>id}" text="{space>path}"/>
+			</Select>
 			<Label text="{i18n>space.key}" required="true"/>
 			<Input value="{space>/key}" maxLength="20" placeholder="HR"/>
 			<Label text="{i18n>common.name}" required="true"/>
 			<Input value="{space>/name}" maxLength="100"/>
 			<Label text="{i18n>common.description}"/>
 			<TextArea value="{space>/description}" rows="3" width="100%"/>
+			<Label text="{i18n>area.manager}" required="true"/>
+			<Input value="{space>/managerName}" showValueHelp="true" valueHelpOnly="true" valueHelpRequest=".onPickManager"
+				enabled="{space>/canAssignManager}"/>
 			<Label text="{i18n>space.icon}"/>
 			<Select selectedKey="{space>/icon}" width="100%">
 				<core:ListItem key="sap-icon://course-book" text="Book" icon="sap-icon://course-book"/>
 				<core:ListItem key="sap-icon://it-system" text="IT" icon="sap-icon://it-system"/>
+				<core:ListItem key="sap-icon://chain-link" text="Network" icon="sap-icon://chain-link"/>
 				<core:ListItem key="sap-icon://group" text="People" icon="sap-icon://group"/>
 				<core:ListItem key="sap-icon://money-bills" text="Finance" icon="sap-icon://money-bills"/>
 				<core:ListItem key="sap-icon://product" text="Product" icon="sap-icon://product"/>
@@ -20,7 +30,7 @@
 				<core:ListItem key="sap-icon://lightbulb" text="Ideas" icon="sap-icon://lightbulb"/>
 			</Select>
 		</f:SimpleForm>
-		<beginButton><Button type="Emphasized" text="{i18n>common.save}" press=".onSave"/></beginButton>
-		<endButton><Button text="{i18n>common.cancel}" press=".onCancel"/></endButton>
+		<beginButton><Button type="Emphasized" text="{i18n>common.save}" press=".onSaveSpace"/></beginButton>
+		<endButton><Button text="{i18n>common.cancel}" press=".onCancelSpace"/></endButton>
 	</Dialog>
 </core:FragmentDefinition>

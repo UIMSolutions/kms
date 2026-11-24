@@ -66,6 +66,7 @@
 				{ "name": "article", "pattern": "articles/{id}", "target": "article" },
 				{ "name": "documents", "pattern": "documents:?query:", "target": "documents" },
 				{ "name": "spaces", "pattern": "spaces", "target": "spaces" },
+				{ "name": "space", "pattern": "spaces/{id}", "target": "space" },
 				{ "name": "users", "pattern": "users", "target": "users" },
 				{ "name": "admin", "pattern": "admin", "target": "admin" }
 			],
@@ -78,6 +79,7 @@
 				"articleEdit": { "id": "articleEdit", "name": "ArticleEdit", "level": 3 },
 				"documents": { "id": "documents", "name": "Documents", "level": 1 },
 				"spaces": { "id": "spaces", "name": "Spaces", "level": 1 },
+				"space": { "id": "space", "name": "AreaDetail", "level": 2 },
 				"users": { "id": "users", "name": "Users", "level": 1 },
 				"admin": { "id": "admin", "name": "Admin", "level": 1 }
 			}

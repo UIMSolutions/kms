@@ -7,18 +7,18 @@
 	<Page title="{i18n>nav.documents}">
 		<headerContent>
 			<Button icon="sap-icon://upload" text="{i18n>document.upload}" type="Emphasized" press=".onUpload"
-				visible="{session>/isEditor}"/>
+				visible="{session>/canCreate}"/>
 		</headerContent>
 		<Table id="documentTable" items="{docs>/items}" noDataText="{i18n>document.empty}" sticky="ColumnHeaders,HeaderToolbar"
 			class="sapUiResponsiveContentPadding">
 			<dragDropConfig>
-				<dnd:DropInfo drop=".onDropFiles" enabled="{session>/isEditor}"/>
+				<dnd:DropInfo drop=".onDropFiles" enabled="{session>/canCreate}"/>
 			</dragDropConfig>
 			<headerToolbar>
 				<OverflowToolbar>
 					<SearchField id="docFilter" width="16rem" placeholder="{i18n>document.searchPlaceholder}" search=".onFilter"/>
 					<Select id="docSpace" selectedKey="" change=".onFilter" items="{spaces>/withAll}" forceSelection="true">
-						<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>name} : ${i18n>common.all} + ' ' + ${i18n>nav.spaces} }"/>
+						<core:Item key="{spaces>id}" text="{= ${spaces>id} ? ${spaces>path} : ${i18n>area.all} }"/>
 					</Select>
 					<Select id="docKind" selectedKey="" change=".onFilter">
 						<core:Item key="" text="{i18n>common.all}"/>

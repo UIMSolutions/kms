@@ -10,7 +10,7 @@ sap.ui.define([
 				? this.getOwnerComponent().getContentDensityClass() : "sapUiSizeCompact");
 			this.getRouter().attachRouteMatched(function (oEvent) {
 				var sName = oEvent.getParameter("name");
-				var mKeys = { article: "articles", articleEdit: "articles", articleNew: "articles" };
+				var mKeys = { article: "articles", articleEdit: "articles", articleNew: "articles", space: "spaces" };
 				this.byId("sideNav").setSelectedKey(mKeys[sName] || sName);
 			}, this);
 			// after login: force a password change when required

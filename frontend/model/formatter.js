@@ -59,7 +59,27 @@ sap.ui.define([
 		},
 
 		roleState: function (sRole) {
-			return sRole === "admin" ? "Error" : (sRole === "editor" ? "Information" : "None");
+			return sRole === "admin" ? "Error" : "None";
+		},
+
+		/** area roles: reader / editor / manager */
+		spaceRoleState: function (sRole) {
+			return sRole === "manager" ? "Success" : (sRole === "editor" ? "Information" : "None");
+		},
+
+		spaceRoleText: function (sRole) {
+			return formatter.enumText.call(this, "spaceRole", sRole);
+		},
+
+		/** where a member's role comes from */
+		memberSource: function (sSource, sPath) {
+			var oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+			return oBundle.getText("area.source." + (sSource || "member"), [sPath || ""]);
+		},
+
+		/** indentation of sub-areas in tree-ordered lists */
+		indent: function (iDepth) {
+			return Math.max(0, (iDepth || 1) - 1) * 1.5 + "rem";
 		},
 
 		/** translates enumeration values via i18n keys like "status.draft" */

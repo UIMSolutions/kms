@@ -126,6 +126,7 @@ sap.ui.define([], function () {
 		patch: function (sPath, oBody, sVersion) {
 			return request("PATCH", sPath, oBody, sVersion ? { "If-Match": "W/\"" + sVersion + "\"" } : undefined);
 		},
+		put: function (sPath, oBody) { return request("PUT", sPath, oBody === undefined ? {} : oBody); },
 		del: function (sPath) { return request("DELETE", sPath); },
 
 		// ---- auth

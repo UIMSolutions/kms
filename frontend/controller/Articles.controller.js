@@ -30,6 +30,7 @@ sap.ui.define([
 			this.api.get("articles", {
 				q: this.byId("articleFilter").getValue(),
 				space: this.byId("articleSpace").getSelectedKey(),
+				deep: "true",
 				status: this.byId("articleStatus").getSelectedKey(),
 				orderBy: this.byId("articleOrder").getSelectedKey(),
 				tag: this._tag,
@@ -52,7 +53,8 @@ sap.ui.define([
 
 		onNew: function () {
 			var sSpace = this.byId("articleSpace").getSelectedKey();
-			this.navTo("articleNew", { query: sSpace ? { space: sSpace } : {} });
+			var bWritable = (this.getOwnerComponent().getModel("session").getProperty("/roles") || {})[sSpace];
+			this.navTo("articleNew", { query: sSpace && bWritable && bWritable !== "reader" ? { space: sSpace } : {} });
 		},
 
 		onOpen: function (oEvent) {

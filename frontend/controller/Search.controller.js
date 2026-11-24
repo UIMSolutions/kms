@@ -60,7 +60,7 @@ sap.ui.define([
 			var fnSpace = function (sId) {
 				var o = (this.getOwnerComponent().getModel("spaces").getProperty("/items") || [])
 					.filter(function (s) { return s.id === sId; })[0];
-				return o ? o.name : sId;
+				return o ? o.path : sId;
 			}.bind(this);
 			if (p.kind) { a.push({ key: "kind", label: this.text("search.facet.kind") + ": " + formatter.kindText.call(this, p.kind) }); }
 			if (p.space) { a.push({ key: "space", label: this.text("search.facet.space") + ": " + fnSpace(p.space) }); }

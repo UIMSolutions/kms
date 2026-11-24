@@ -19,10 +19,10 @@
 			<columns>
 				<Column><Text text="{i18n>user.username}"/></Column>
 				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>user.email}"/></Column>
-				<Column><Text text="{i18n>user.role}"/></Column>
+				<Column><Text text="{i18n>user.globalRole}"/></Column>
 				<Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>common.status}"/></Column>
 				<Column minScreenWidth="Desktop" demandPopin="true"><Text text="{i18n>user.lastLogin}"/></Column>
-				<Column width="10rem" hAlign="End"/>
+				<Column width="12rem" hAlign="End"/>
 			</columns>
 			<items>
 				<ColumnListItem>
@@ -42,6 +42,7 @@
 								visible="{users>locked}"/>
 							<Button icon="sap-icon://key" type="Transparent" tooltip="{i18n>user.resetPassword}" press=".onResetPassword"
 								visible="{= !${users>external} }"/>
+							<Button icon="sap-icon://course-book" type="Transparent" tooltip="{i18n>area.assignments}" press=".onAssignments"/>
 							<Button icon="sap-icon://edit" type="Transparent" tooltip="{i18n>common.edit}" press=".onEdit"/>
 							<Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>common.delete}" press=".onDelete"
 								enabled="{= ${users>id} !== ${session>/user/id} }"/>
