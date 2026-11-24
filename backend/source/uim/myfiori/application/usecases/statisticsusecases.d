@@ -14,10 +14,12 @@ final class StatisticsInteractor : StatisticsUseCase {
     private DocumentRepository documents;
     private BlobStorage blobs;
     private SearchIndexer indexer;
+    private AccessResolver resolver;
     private DtoMapper mapper;
 
     this(UserRepository users, SpaceRepository spaces, ArticleRepository articles, DocumentRepository documents,
-        BlobStorage blobs, SearchIndexer indexer, DtoMapper mapper) {
+        BlobStorage blobs, SearchIndexer indexer, AccessResolver resolver, DtoMapper mapper) {
+        this.resolver = resolver;
         this.users = users;
         this.spaces = spaces;
         this.articles = articles;
@@ -28,15 +30,20 @@ final class StatisticsInteractor : StatisticsUseCase {
     }
 
     StatsDto stats(in Principal p) {
+        auto access = resolver.resolve(p);
         StatsDto s;
-        s.users = users.count();
-        s.spaces = spaces.all().length;
+        s.users = p.isAdmin ? users.count() : 0;
+        foreach (id; access.readableSpaceIds()) {
+            s.spaces++;
+            if (access.canManage(id))
+                s.managedSpaces++;
+        }
         auto arts = articles.all();
         auto docs = documents.all();
         size_t[string] tags;
         RecentItemDto[] recent;
         foreach (a; arts) {
-            if (!AccessPolicy.canReadArticle(p, a))
+            if (!access.canReadArticle(a))
                 continue;
             s.articles++;
             if (a.status == ArticleStatus.published)
@@ -49,6 +56,8 @@ final class StatisticsInteractor : StatisticsUseCase {
         }
         size_t[string] kinds;
         foreach (d; docs) {
+            if (!access.canRead(d.spaceId))
+                continue;
             s.documents++;
             kinds[kindName(d.kind)]++;
             foreach (t; d.tags)

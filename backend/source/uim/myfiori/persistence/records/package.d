@@ -9,6 +9,7 @@ enum Collections : string {
     spaces = "spaces",
     articles = "articles",
     articleVersions = "article_versions",
+    memberships = "memberships",
     documents = "documents"
 }
 
@@ -32,6 +33,8 @@ struct UserRecord {
 
 struct SpaceRecord {
     string id;
+    @optional string parentId;
+    @optional string managerId;
     @optional string key;
     @optional string name;
     @optional string description;
@@ -94,4 +97,14 @@ struct DocumentRecord {
     @optional long version_ = 1;
     @optional uint fileRevision = 1;
     @optional ulong downloads;
+}
+
+struct MembershipRecord {
+    string id;
+    @optional string spaceId;
+    @optional string userId;
+    @optional string role;
+    @optional string createdBy;
+    @optional string createdAt;
+    @optional string updatedAt;
 }

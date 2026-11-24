@@ -20,6 +20,7 @@ final class Container {
     SpaceRepository spaceRepo;
     ArticleRepository articleRepo;
     ArticleVersionRepository versionRepo;
+    MembershipRepository membershipRepo;
     DocumentRepository documentRepo;
     SystemClock clock;
     UuidGenerator ids;
@@ -34,6 +35,7 @@ final class Container {
 
     // application
     DtoMapper mapper;
+    AccessResolver resolver;
     SearchIndexer indexer;
     TextExtractionService extraction;
     TextExtractionWorker extractionWorker;
@@ -57,6 +59,7 @@ final class Container {
         spaceRepo = new StorageSpaceRepository(storage);
         articleRepo = new StorageArticleRepository(storage);
         versionRepo = new StorageArticleVersionRepository(storage);
+        membershipRepo = new StorageMembershipRepository(storage);
         documentRepo = new StorageDocumentRepository(storage);
 
         clock = new SystemClock;
@@ -77,6 +80,7 @@ final class Container {
         audit = new AuditLog(memory ? "" : buildPath(config.storage.dataDir, "audit"));
 
         mapper = new DtoMapper(userRepo, spaceRepo, documentRepo);
+        resolver = new AccessResolver(spaceRepo, membershipRepo);
         indexer = new SearchIndexer(new SearchEngine);
         extraction = new TextExtractionService(documentRepo, blobs, extractor, indexer);
         extractionWorker = new TextExtractionWorker(extraction, synchronousExtraction);
@@ -85,27 +89,32 @@ final class Container {
         events.subscribe(extractionWorker);
 
         identity = new TokenIdentityService(tokens, xsuaa, userRepo, clock, ids);
-        bootstrap = new BootstrapService(userRepo, spaceRepo, articleRepo, hasher, clock, ids);
-        auth = new AuthInteractor(userRepo, hasher, tokens, clock, events, mapper);
-        users = new UserInteractor(userRepo, hasher, clock, ids, events, mapper);
-        spaces = new SpaceInteractor(spaceRepo, articleRepo, documentRepo, clock, ids, events, mapper);
-        articles = new ArticleInteractor(articleRepo, versionRepo, spaceRepo, documentRepo, indexer, clock, ids,
-            events, mapper);
+        bootstrap = new BootstrapService(userRepo, spaceRepo, membershipRepo, articleRepo, hasher, clock, ids);
+        auth = new AuthInteractor(userRepo, hasher, tokens, clock, events, mapper, resolver);
+        users = new UserInteractor(userRepo, spaceRepo, membershipRepo, resolver, hasher, clock, ids, events, mapper);
+        spaces = new SpaceInteractor(spaceRepo, membershipRepo, userRepo, articleRepo, documentRepo, resolver, clock,
+            ids, events, mapper);
+        articles = new ArticleInteractor(articleRepo, versionRepo, spaceRepo, documentRepo, indexer, resolver, clock,
+            ids, events, mapper);
         MediaSettings ms;
         ms.maxUploadBytes = config.media.maxUploadMB * 1024UL * 1024UL;
         ms.quotaBytes = config.media.quotaMB * 1024UL * 1024UL;
         foreach (e; config.media.allowedExtensions)
             ms.allowedExtensions ~= e.length && e[0] != '.' ? "." ~ e : e;
-        documents = new DocumentInteractor(documentRepo, articleRepo, spaceRepo, blobs, mimeTypes, indexer, clock,
-            ids, events, mapper, ms);
-        search = new SearchInteractor(indexer, articleRepo, documentRepo, mapper, events, clock);
-        statistics = new StatisticsInteractor(userRepo, spaceRepo, articleRepo, documentRepo, blobs, indexer, mapper);
+        documents = new DocumentInteractor(documentRepo, articleRepo, spaceRepo, blobs, mimeTypes, indexer, resolver,
+            clock, ids, events, mapper, ms);
+        search = new SearchInteractor(indexer, resolver, articleRepo, documentRepo, mapper, events, clock);
+        statistics = new StatisticsInteractor(userRepo, spaceRepo, articleRepo, documentRepo, blobs, indexer, resolver,
+            mapper);
     }
 
     /// Seeds an empty store, builds the search index, queues pending text extractions.
     void start() {
         auto b = config.bootstrap;
         auto r = bootstrap.run(BootstrapSettings(b.adminUser, b.adminPassword, b.demoContent), () => randomSecret(12));
+        if (r.migratedManagers || r.migratedMemberships)
+            logInfo("migration: %s area(s) got a category manager, %s membership(s) created from global roles",
+                r.migratedManagers, r.migratedMemberships);
         if (r.performed) {
             logInfo("bootstrap: created administrator '%s'", b.adminUser);
             if (r.generatedPassword.length)

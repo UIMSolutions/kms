@@ -1,7 +1,8 @@
 /// Resolves bearer tokens to principals.
 ///  - local mode: HS256 tokens issued by /api/v1/auth/login
 ///  - xsuaa mode: RS256 tokens forwarded by the approuter; users are provisioned on first
-///    access and their role follows the XSUAA scopes (Admin > Editor > Reader)
+///    access; the XSUAA scope decides between administrator and user, area roles are
+///    assigned inside the KMS by category managers
 module uim.myfiori.application.services.identityservice;
 
 import std.algorithm.searching : canFind;
@@ -47,12 +48,11 @@ final class TokenIdentityService : IdentityService {
 
     private Principal provision(ExternalIdentity x) {
         Role role;
+        // area rights come from memberships in the KMS; XSUAA only decides user vs. admin
         if (x.scopes.canFind("Admin"))
             role = Role.admin;
-        else if (x.scopes.canFind("Editor"))
-            role = Role.editor;
-        else if (x.scopes.canFind("Reader"))
-            role = Role.reader;
+        else if (x.scopes.canFind("User") || x.scopes.canFind("Editor") || x.scopes.canFind("Reader"))
+            role = Role.user;
         else
             throw new ForbiddenException("No KMS role assigned");
         auto u = users.byExternalId(x.userName);

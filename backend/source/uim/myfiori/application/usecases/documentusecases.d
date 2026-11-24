@@ -26,6 +26,7 @@ final class DocumentInteractor : DocumentUseCase {
     private BlobStorage blobs;
     private MimeTypes mime;
     private SearchIndexer indexer;
+    private AccessResolver resolver;
     private Clock clock;
     private IdGenerator ids;
     private EventPublisher events;
@@ -33,8 +34,9 @@ final class DocumentInteractor : DocumentUseCase {
     private MediaSettings settings;
 
     this(DocumentRepository documents, ArticleRepository articles, SpaceRepository spaces, BlobStorage blobs,
-        MimeTypes mime, SearchIndexer indexer, Clock clock, IdGenerator ids, EventPublisher events,
-        DtoMapper mapper, MediaSettings settings) {
+        MimeTypes mime, SearchIndexer indexer, AccessResolver resolver, Clock clock, IdGenerator ids,
+        EventPublisher events, DtoMapper mapper, MediaSettings settings) {
+        this.resolver = resolver;
         this.documents = documents;
         this.articles = articles;
         this.spaces = spaces;
@@ -49,9 +51,17 @@ final class DocumentInteractor : DocumentUseCase {
     }
 
     Page!DocumentDto list(in Principal p, DocumentFilter f) {
+        auto access = resolver.resolve(p);
         auto text = f.text.strip.toLower;
         auto tag = f.tag.strip.toLower;
-        auto all = (f.spaceId.length ? documents.bySpace(f.spaceId) : documents.all()).filter!((d) {
+        string[] areas;
+        if (f.spaceId.length)
+            areas = [f.spaceId] ~ (f.includeSubAreas ? access.tree.descendants(f.spaceId) : null);
+        auto all = documents.all().filter!((d) {
+            if (areas.length && !areas.canFind(d.spaceId))
+                return false;
+            if (!access.canRead(d.spaceId))
+                return false;
             if (f.kind.length && kindName(d.kind) != f.kind)
                 return false;
             if (tag.length && !d.tags.canFind(tag))
@@ -77,19 +87,23 @@ final class DocumentInteractor : DocumentUseCase {
         Page!DocumentDto r;
         r.total = all.length;
         foreach (d; slicePage(all, f.skip, f.top))
-            r.items ~= mapper.document(d, p);
+            r.items ~= mapper.document(d, access);
         return r;
     }
 
     DocumentDto get(in Principal p, string id) {
-        return mapper.document(require(id), p);
+        auto access = resolver.resolve(p);
+        return mapper.document(readable(access, id), access);
     }
 
     DocumentDto upload(in Principal p, UploadInput input, const(ubyte)[] data) {
-        AccessPolicy.requireWrite(p);
+        auto access = resolver.resolve(p);
+        if (input.spaceId.length == 0)
+            throw new ValidationException("Area is required");
+        if (spaces.byId(input.spaceId) is null)
+            throw new ValidationException("Unknown area");
+        access.requireWrite(input.spaceId);
         auto fileName = checkFile(input.fileName, data);
-        if (input.spaceId.length && spaces.byId(input.spaceId) is null)
-            throw new ValidationException("Unknown space");
         const now = clock.now;
         auto d = new Document;
         d.id = ids.newId;
@@ -111,12 +125,13 @@ final class DocumentInteractor : DocumentUseCase {
         documents.save(d);
         indexer.index(d);
         events.publish(DomainEvent("document.uploaded", d.id, p.userId, d.fileName, now));
-        return mapper.document(d, p);
+        return mapper.document(d, access);
     }
 
     DocumentDto replaceFile(in Principal p, string id, string fileName, string mimeType, const(ubyte)[] data) {
-        AccessPolicy.requireWrite(p);
-        auto d = require(id);
+        auto access = resolver.resolve(p);
+        auto d = readable(access, id);
+        access.requireWrite(d.spaceId);
         auto name = checkFile(fileName.length ? fileName : d.fileName, data, d.size);
         auto info = blobs.put(d.blobKey, data);
         if (d.title == d.fileName)
@@ -135,12 +150,13 @@ final class DocumentInteractor : DocumentUseCase {
         documents.save(d);
         indexer.index(d);
         events.publish(DomainEvent("document.uploaded", d.id, p.userId, d.fileName, clock.now));
-        return mapper.document(d, p);
+        return mapper.document(d, access);
     }
 
     DocumentDto update(in Principal p, string id, DocumentInput input) {
-        AccessPolicy.requireWrite(p);
-        auto d = require(id);
+        auto access = resolver.resolve(p);
+        auto d = readable(access, id);
+        access.requireWrite(d.spaceId);
         if (!input.title.isNull) {
             auto t = input.title.get.strip;
             if (t.length == 0 || t.length > maxTitleLength)
@@ -149,9 +165,10 @@ final class DocumentInteractor : DocumentUseCase {
         }
         if (!input.description.isNull)
             d.description = input.description.get;
-        if (!input.spaceId.isNull) {
-            if (input.spaceId.get.length && spaces.byId(input.spaceId.get) is null)
-                throw new ValidationException("Unknown space");
+        if (!input.spaceId.isNull && input.spaceId.get != d.spaceId) {
+            if (spaces.byId(input.spaceId.get) is null)
+                throw new ValidationException("Unknown area");
+            access.requireWrite(input.spaceId.get);
             d.spaceId = input.spaceId.get;
         }
         if (!input.tags.isNull)
@@ -161,11 +178,11 @@ final class DocumentInteractor : DocumentUseCase {
         d.updatedAt = clock.now;
         documents.save(d);
         indexer.index(d);
-        return mapper.document(d, p);
+        return mapper.document(d, access);
     }
 
     FileContent content(in Principal p, string id) {
-        auto d = require(id);
+        auto d = readable(resolver.resolve(p), id);
         if (!blobs.exists(d.blobKey))
             throw new NotFoundException("File content missing");
         d.downloads++;
@@ -182,8 +199,9 @@ final class DocumentInteractor : DocumentUseCase {
     }
 
     void remove(in Principal p, string id) {
-        auto d = require(id);
-        AccessPolicy.requireDelete(p, d.uploadedBy);
+        auto access = resolver.resolve(p);
+        auto d = readable(access, id);
+        access.requireDelete(d.spaceId, d.uploadedBy);
         // detach from articles
         foreach (a; articles.all())
             if (a.attachmentIds.canFind(d.id)) {
@@ -201,6 +219,13 @@ final class DocumentInteractor : DocumentUseCase {
     private Document require(string id) {
         auto d = documents.byId(id);
         if (d is null)
+            throw new NotFoundException("Document not found");
+        return d;
+    }
+
+    private Document readable(in SpaceAccess access, string id) {
+        auto d = require(id);
+        if (!access.canRead(d.spaceId))
             throw new NotFoundException("Document not found");
         return d;
     }

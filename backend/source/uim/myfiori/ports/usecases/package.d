@@ -19,6 +19,10 @@ interface UserUseCase {
     void resetPassword(in Principal p, string id, string newPassword);
     void unlock(in Principal p, string id);
     void remove(in Principal p, string id);
+    /// minimal user list for picking members / managers (managers and administrators)
+    DirectoryEntryDto[] directory(in Principal p, string query);
+    /// areas and roles of a user (administrators, or the user himself)
+    AssignmentDto[] assignments(in Principal p, string userId);
 }
 
 interface SpaceUseCase {
@@ -27,6 +31,10 @@ interface SpaceUseCase {
     SpaceDto create(in Principal p, SpaceInput input);
     SpaceDto update(in Principal p, string id, SpaceInput input);
     void remove(in Principal p, string id);
+    SpaceDto setManager(in Principal p, string id, string userId);
+    MemberDto[] members(in Principal p, string id);
+    MemberDto setMember(in Principal p, string id, string userId, string role);
+    void removeMember(in Principal p, string id, string userId);
 }
 
 interface ArticleUseCase {

@@ -1,4 +1,4 @@
-/// Administrative commands, e.g. `kms-backend user-add anna editor 'S3cret-Passw0rd'`.
+/// Administrative commands, e.g. `kms-backend user-add anna user 'S3cret-Passw0rd'`.
 module uim.myfiori.presentation.cli.commands;
 
 import std.algorithm.searching : canFind;
@@ -83,9 +83,9 @@ final class AdminCli {
     private static int usage() {
         writeln("usage: kms-backend <command>\n"
                 ~ "  user-list\n"
-                ~ "  user-add <username> <reader|editor|admin> <password>\n"
+                ~ "  user-add <username> <user|admin> <password>\n"
                 ~ "  user-passwd <username> <password>\n"
-                ~ "  user-role <username> <reader|editor|admin>\n"
+                ~ "  user-role <username> <user|admin>\n"
                 ~ "  reindex\n"
                 ~ "without a command the HTTP server starts");
         return 2;

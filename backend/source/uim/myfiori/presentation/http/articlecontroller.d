@@ -40,6 +40,7 @@ final class ArticleController {
         r.get(apiBase ~ "/articles", authed(identity, (p, req, res) {
                 ArticleFilter f;
                 f.spaceId = qs(req, "space");
+                f.includeSubAreas = qs(req, "deep") == "true";
                 f.status = qs(req, "status");
                 f.tag = qs(req, "tag");
                 f.authorId = qs(req, "author");

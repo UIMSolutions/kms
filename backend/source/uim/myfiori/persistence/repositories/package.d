@@ -77,6 +77,25 @@ final class StorageSpaceRepository : SpaceRepository {
     }
 }
 
+final class StorageMembershipRepository : MembershipRepository {
+    mixin StorageCrud!(Membership, MembershipRecord, Collections.memberships);
+
+    Membership[] bySpace(string spaceId) {
+        return all().filter!(m => m.spaceId == spaceId).array;
+    }
+
+    Membership[] byUser(string userId) {
+        return all().filter!(m => m.userId == userId).array;
+    }
+
+    Membership find(string spaceId, string userId) {
+        foreach (m; all())
+            if (m.spaceId == spaceId && m.userId == userId)
+                return m;
+        return null;
+    }
+}
+
 final class StorageArticleRepository : ArticleRepository {
     mixin StorageCrud!(Article, ArticleRecord, Collections.articles);
 

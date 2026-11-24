@@ -1,4 +1,4 @@
-/// Entity -> DTO conversion (resolves user and space names).
+/// Entity -> DTO conversion (resolves user names and area paths, computes the caller's rights).
 module uim.myfiori.application.services.dtomapper;
 
 import std.datetime.systime : SysTime;
@@ -28,11 +28,9 @@ final class DtoMapper {
         return u is null ? "(deleted user)" : (u.displayName.length ? u.displayName : u.username);
     }
 
+    /// Full path of an area ("IT / Network"); builds the tree on demand.
     string spaceName(string id) {
-        if (id.length == 0)
-            return "";
-        auto s = spaces.byId(id);
-        return s is null ? "" : s.name;
+        return id.length ? new SpaceTree(spaces.all()).path(id) : "";
     }
 
     UserDto user(User u, SysTime now) {
@@ -53,33 +51,60 @@ final class DtoMapper {
         return d;
     }
 
-    SpaceDto space(Space s, size_t articleCount, size_t documentCount) {
+    /// User including the effective area roles (for the signed-in user).
+    UserDto me(User u, in SpaceAccess access, SysTime now) {
+        auto d = user(u, now);
+        foreach (id; access.readableSpaceIds())
+            d.spaceRoles ~= SpaceRoleDto(id, spaceRoleName(access.roleIn(id)));
+        d.canCreateContent = access.anyWritable;
+        d.managesAreas = access.anyManaged;
+        return d;
+    }
+
+    SpaceDto space(Space s, in SpaceAccess access, size_t memberCount, size_t articleCount, size_t documentCount) {
+        auto tree = cast(SpaceTree) access.tree;
         SpaceDto d;
         d.id = s.id;
+        d.parentId = s.parentId;
+        d.parentPath = s.parentId.length && access.canRead(s.parentId) ? tree.path(s.parentId) : "";
+        d.path = tree.path(s.id);
+        d.depth = tree.depth(s.id);
         d.key = s.key;
         d.name = s.name;
         d.description = s.description;
         d.icon = s.icon;
+        d.managerId = s.managerId;
+        d.managerName = userName(s.managerId);
+        foreach (c; tree.children(s.id))
+            if (access.canRead(c))
+                d.childCount++;
+        d.memberCount = memberCount;
         d.articleCount = articleCount;
         d.documentCount = documentCount;
+        d.myRole = spaceRoleName(access.roleIn(s.id));
+        d.canWrite = access.canWrite(s.id);
+        d.canManage = access.canManage(s.id);
+        d.canGovern = access.canGovern(s);
         d.createdAt = iso(s.createdAt);
         d.updatedAt = iso(s.updatedAt);
         d.version_ = s.version_;
         return d;
     }
 
-    ArticleDto article(Article a, in Principal p, bool withBody = true) {
+    ArticleDto article(Article a, in SpaceAccess access, bool withBody = true) {
+        auto tree = cast(SpaceTree) access.tree;
         ArticleDto d;
         d.id = a.id;
         d.spaceId = a.spaceId;
-        d.spaceName = spaceName(a.spaceId);
+        d.spaceName = tree.path(a.spaceId);
         d.title = a.title;
         d.summary = a.summary;
         if (withBody) {
             d.body = a.body;
             foreach (id; a.attachmentIds) {
                 auto doc = documents.byId(id);
-                if (doc !is null)
+                // attachments from areas the reader cannot see stay hidden
+                if (doc !is null && access.canRead(doc.spaceId))
                     d.attachments ~= AttachmentDto(doc.id, doc.title, doc.fileName, doc.mimeType,
                         kindName(doc.kind), doc.size);
             }
@@ -95,8 +120,8 @@ final class DtoMapper {
         d.publishedAt = iso(a.publishedAt);
         d.version_ = a.version_;
         d.views = a.views;
-        d.canEdit = AccessPolicy.canWrite(p);
-        d.canDelete = AccessPolicy.canDelete(p, a.authorId);
+        d.canEdit = access.canWrite(a.spaceId);
+        d.canDelete = access.canDelete(a.spaceId, a.authorId);
         return d;
     }
 
@@ -105,11 +130,12 @@ final class DtoMapper {
             v.changedBy, userName(v.changedBy), iso(v.changedAt));
     }
 
-    DocumentDto document(Document doc, in Principal p) {
+    DocumentDto document(Document doc, in SpaceAccess access) {
+        auto tree = cast(SpaceTree) access.tree;
         DocumentDto d;
         d.id = doc.id;
         d.spaceId = doc.spaceId;
-        d.spaceName = spaceName(doc.spaceId);
+        d.spaceName = tree.path(doc.spaceId);
         d.title = doc.title;
         d.description = doc.description;
         d.fileName = doc.fileName;
@@ -128,8 +154,8 @@ final class DtoMapper {
         d.fileRevision = doc.fileRevision;
         d.downloads = doc.downloads;
         d.contentUrl = "/api/v1/documents/" ~ doc.id ~ "/content";
-        d.canEdit = AccessPolicy.canWrite(p);
-        d.canDelete = AccessPolicy.canDelete(p, doc.uploadedBy);
+        d.canEdit = access.canWrite(doc.spaceId);
+        d.canDelete = access.canDelete(doc.spaceId, doc.uploadedBy);
         return d;
     }
 }

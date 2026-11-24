@@ -13,10 +13,12 @@ final class AuthInteractor : AuthUseCase {
     private Clock clock;
     private EventPublisher events;
     private DtoMapper mapper;
+    private AccessResolver resolver;
     private string dummyHash; // constant-time behaviour for unknown users
 
     this(UserRepository users, PasswordHasher hasher, TokenIssuer tokens, Clock clock, EventPublisher events,
-        DtoMapper mapper) {
+        DtoMapper mapper, AccessResolver resolver) {
+        this.resolver = resolver;
         this.users = users;
         this.hasher = hasher;
         this.tokens = tokens;
@@ -51,11 +53,12 @@ final class AuthInteractor : AuthUseCase {
         events.publish(DomainEvent("auth.login", u.id, u.id, "", now));
         auto ttl = tokens.ttlSeconds;
         auto token = tokens.issue(TokenClaims(u.id, u.username, roleName(u.role), now.toUnixTime + ttl));
-        return LoginResult(token, ttl, mapper.user(u, now));
+        auto access = resolver.resolve(Principal(u.id, u.username, u.displayName, u.role));
+        return LoginResult(token, ttl, mapper.me(u, access, now));
     }
 
     UserDto me(in Principal p) {
-        return mapper.user(require(p), clock.now);
+        return mapper.me(require(p), resolver.resolve(p), clock.now);
     }
 
     void changePassword(in Principal p, string oldPassword, string newPassword) {
@@ -84,7 +87,7 @@ final class AuthInteractor : AuthUseCase {
         u.updatedAt = clock.now;
         u.version_++;
         users.save(u);
-        return mapper.user(u, clock.now);
+        return mapper.me(u, resolver.resolve(p), clock.now);
     }
 
     private User require(in Principal p) {

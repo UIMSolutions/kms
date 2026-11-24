@@ -40,6 +40,15 @@ final class UserController {
                 pr.top = qsNum(req, "top", 200, 1000);
                 sendJson(res, users.list(p, pr));
             }));
+        // registered before /users/:id so that "directory" is not taken as an id
+        r.get(apiBase ~ "/users/directory", authed(identity, (p, req, res) {
+                auto list = users.directory(p, qs(req, "q"));
+                sendJson(res, Json(["items": serializeToJson(list), "total": Json(list.length)]));
+            }));
+        r.get(apiBase ~ "/users/:id/assignments", authed(identity, (p, req, res) {
+                auto list = users.assignments(p, req.params["id"]);
+                sendJson(res, Json(["items": serializeToJson(list), "total": Json(list.length)]));
+            }));
         r.post(apiBase ~ "/users", authed(identity, (p, req, res) {
                 sendJson(res, users.create(p, parseInput(readJsonBody(req, maxBody))), 201);
             }));

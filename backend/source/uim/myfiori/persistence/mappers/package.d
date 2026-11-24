@@ -33,7 +33,9 @@ User toEntity(in UserRecord r) {
     u.displayName = r.displayName;
     u.email = r.email;
     Role role;
-    u.role = tryParseRole(r.role, role) ? role : Role.reader;
+    u.role = tryParseRole(r.role, role) ? role : Role.user;
+    if (isLegacyRole(r.role))
+        u.legacyRole = r.role;
     u.active = r.active;
     u.passwordHash = r.passwordHash;
     u.externalId = r.externalId;
@@ -50,13 +52,15 @@ User toEntity(in UserRecord r) {
 // ------------------------------------------------------------------ spaces
 
 SpaceRecord toRecord(Space s) {
-    return SpaceRecord(s.id, s.key, s.name, s.description, s.icon, s.createdBy, toStored(s.createdAt),
+    return SpaceRecord(s.id, s.parentId, s.managerId, s.key, s.name, s.description, s.icon, s.createdBy, toStored(s.createdAt),
         toStored(s.updatedAt), s.version_);
 }
 
 Space toEntity(in SpaceRecord r) {
     auto s = new Space;
     s.id = r.id;
+    s.parentId = r.parentId;
+    s.managerId = r.managerId;
     s.key = r.key;
     s.name = r.name;
     s.description = r.description;
@@ -67,6 +71,26 @@ Space toEntity(in SpaceRecord r) {
     s.updatedAt = fromStored(r.updatedAt);
     s.version_ = r.version_;
     return s;
+}
+
+// ------------------------------------------------------------------ memberships
+
+MembershipRecord toRecord(Membership m) {
+    return MembershipRecord(m.id, m.spaceId, m.userId, spaceRoleName(m.role), m.createdBy, toStored(m.createdAt),
+        toStored(m.updatedAt));
+}
+
+Membership toEntity(in MembershipRecord r) {
+    auto m = new Membership;
+    m.id = r.id;
+    m.spaceId = r.spaceId;
+    m.userId = r.userId;
+    SpaceRole role;
+    m.role = tryParseSpaceRole(r.role, role) && role != SpaceRole.manager ? role : SpaceRole.reader;
+    m.createdBy = r.createdBy;
+    m.createdAt = fromStored(r.createdAt);
+    m.updatedAt = fromStored(r.updatedAt);
+    return m;
 }
 
 // ------------------------------------------------------------------ articles

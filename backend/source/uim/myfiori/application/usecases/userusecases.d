@@ -17,9 +17,15 @@ final class UserInteractor : UserUseCase {
     private IdGenerator ids;
     private EventPublisher events;
     private DtoMapper mapper;
+    private SpaceRepository spaces;
+    private MembershipRepository memberships;
+    private AccessResolver resolver;
 
-    this(UserRepository users, PasswordHasher hasher, Clock clock, IdGenerator ids, EventPublisher events,
-        DtoMapper mapper) {
+    this(UserRepository users, SpaceRepository spaces, MembershipRepository memberships, AccessResolver resolver,
+        PasswordHasher hasher, Clock clock, IdGenerator ids, EventPublisher events, DtoMapper mapper) {
+        this.spaces = spaces;
+        this.memberships = memberships;
+        this.resolver = resolver;
         this.users = users;
         this.hasher = hasher;
         this.clock = clock;
@@ -64,7 +70,7 @@ final class UserInteractor : UserUseCase {
         u.username = name;
         u.displayName = input.displayName.isNull ? name : input.displayName.get.strip;
         u.email = input.email.isNull ? "" : validEmail(input.email.get);
-        u.role = parseRole(input.role.isNull ? "reader" : input.role.get);
+        u.role = parseRole(input.role.isNull ? "user" : input.role.get);
         u.active = input.active.isNull ? true : input.active.get;
         u.passwordHash = hasher.hash(input.password.get);
         u.mustChangePassword = input.mustChangePassword.isNull ? true : input.mustChangePassword.get;
@@ -148,8 +154,48 @@ final class UserInteractor : UserUseCase {
             throw new ValidationException("You cannot delete yourself");
         if (u.role == Role.admin)
             ensureAnotherAdmin(u.id);
+        foreach (sp; spaces.all())
+            if (sp.managerId == u.id)
+                throw new ConflictException("The user is category manager of '" ~ sp.name
+                        ~ "' - assign another category manager first");
+        foreach (m; memberships.byUser(u.id))
+            memberships.remove(m.id);
         users.remove(u.id);
         events.publish(DomainEvent("user.deleted", u.id, p.userId, u.username, clock.now));
+    }
+
+    DirectoryEntryDto[] directory(in Principal p, string query) {
+        if (!p.isAdmin && !resolver.resolve(p).anyManaged)
+            throw new ForbiddenException("Only category managers and administrators may browse users");
+        auto q = query.strip.toLower;
+        DirectoryEntryDto[] r;
+        foreach (u; users.all()) {
+            if (!u.active)
+                continue;
+            if (q.length && !u.username.canFind(q) && !u.displayName.toLower.canFind(q) && !u.email.toLower.canFind(q))
+                continue;
+            r ~= DirectoryEntryDto(u.id, u.username, u.displayName.length ? u.displayName : u.username, u.email);
+        }
+        r.sort!((a, b) => a.displayName.toLower < b.displayName.toLower);
+        return r.length > 200 ? r[0 .. 200] : r;
+    }
+
+    AssignmentDto[] assignments(in Principal p, string userId) {
+        if (p.userId != userId)
+            AccessPolicy.requireAdmin(p);
+        auto u = require(userId);
+        // what this user can do, independent of the caller
+        auto access = resolver.resolve(Principal(u.id, u.username, u.displayName, Role.user));
+        AssignmentDto[] r;
+        foreach (s; spaces.all()) {
+            auto role = access.roleIn(s.id);
+            if (role == SpaceRole.none)
+                continue;
+            auto source = s.managerId == u.id ? "manager" : (access.isInheritedManager(s.id) ? "inherited" : "member");
+            r ~= AssignmentDto(s.id, access.tree.path(s.id), spaceRoleName(role), source);
+        }
+        r.sort!((a, b) => a.spacePath.toLower < b.spacePath.toLower);
+        return r;
     }
 
     private User require(string id) {
@@ -162,7 +208,7 @@ final class UserInteractor : UserUseCase {
     private static Role parseRole(string s) {
         Role r;
         if (!tryParseRole(s, r))
-            throw new ValidationException("Unknown role '" ~ s ~ "' (reader, editor, admin)");
+            throw new ValidationException("Unknown role '" ~ s ~ "' (user, admin)");
         return r;
     }
 

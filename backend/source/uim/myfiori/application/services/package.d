@@ -2,6 +2,7 @@
 module uim.myfiori.application.services;
 
 public import uim.myfiori.application.services.dtomapper;
+public import uim.myfiori.application.services.accessresolver;
 public import uim.myfiori.application.services.searchindexer;
 public import uim.myfiori.application.services.identityservice;
 public import uim.myfiori.application.services.bootstrapservice;

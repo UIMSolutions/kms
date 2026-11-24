@@ -13,7 +13,8 @@ final class User {
     string username;      /// unique, lower case
     string displayName;
     string email;
-    Role role = Role.reader;
+    Role role = Role.user;
+    string legacyRole;    /// transient: pre-area global role ("reader"/"editor") found on load, for migration
     bool active = true;
     string passwordHash;  /// empty for external (XSUAA) users
     string externalId;    /// XSUAA user_name when provisioned from a token

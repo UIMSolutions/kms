@@ -1,7 +1,8 @@
 /// First start: creates the initial administrator and optional demo content.
+/// Every start: migrates data of release 1.0 (global reader / editor roles, areas without
+/// category manager) to the area model.
 module uim.myfiori.application.services.bootstrapservice;
 
-import uim.myfiori.application.services.searchindexer;
 import uim.myfiori.domain;
 import uim.myfiori.ports;
 
@@ -14,20 +15,24 @@ struct BootstrapSettings {
 struct BootstrapResult {
     bool performed;
     string generatedPassword;
+    size_t migratedManagers;    /// areas that got a category manager
+    size_t migratedMemberships; /// memberships created from global roles
 }
 
 final class BootstrapService {
     private UserRepository users;
     private SpaceRepository spaces;
+    private MembershipRepository memberships;
     private ArticleRepository articles;
     private PasswordHasher hasher;
     private Clock clock;
     private IdGenerator ids;
 
-    this(UserRepository users, SpaceRepository spaces, ArticleRepository articles, PasswordHasher hasher,
-        Clock clock, IdGenerator ids) {
+    this(UserRepository users, SpaceRepository spaces, MembershipRepository memberships, ArticleRepository articles,
+        PasswordHasher hasher, Clock clock, IdGenerator ids) {
         this.users = users;
         this.spaces = spaces;
+        this.memberships = memberships;
         this.articles = articles;
         this.hasher = hasher;
         this.clock = clock;
@@ -36,39 +41,80 @@ final class BootstrapService {
 
     BootstrapResult run(BootstrapSettings s, string delegate() generatePassword) {
         BootstrapResult r;
-        if (users.count() > 0)
-            return r;
-        r.performed = true;
-        const now = clock.now;
-        auto admin = new User;
-        admin.id = ids.newId;
-        admin.username = validUsername(s.adminUser);
-        admin.displayName = "Administrator";
-        admin.role = Role.admin;
-        auto pw = s.adminPassword;
-        if (pw.length == 0) {
-            pw = generatePassword();
-            r.generatedPassword = pw;
-            admin.mustChangePassword = true;
+        if (users.count() == 0) {
+            r.performed = true;
+            const now = clock.now;
+            auto admin = new User;
+            admin.id = ids.newId;
+            admin.username = validUsername(s.adminUser);
+            admin.displayName = "Administrator";
+            admin.role = Role.admin;
+            auto pw = s.adminPassword;
+            if (pw.length == 0) {
+                pw = generatePassword();
+                r.generatedPassword = pw;
+                admin.mustChangePassword = true;
+            }
+            admin.passwordHash = hasher.hash(pw);
+            admin.createdAt = admin.updatedAt = now;
+            users.save(admin);
+            if (s.demoContent && spaces.all().length == 0)
+                seedDemo(admin.id);
         }
-        admin.passwordHash = hasher.hash(pw);
-        admin.createdAt = admin.updatedAt = now;
-        users.save(admin);
-
-        if (s.demoContent && spaces.all().length == 0)
-            seedDemo(admin.id);
+        migrate(r);
         return r;
+    }
+
+    /// Release 1.0 -> areas: every area needs a category manager; users with the former
+    /// global roles "reader" / "editor" become members of all existing areas with that role.
+    private void migrate(ref BootstrapResult r) {
+        string adminId;
+        foreach (u; users.all())
+            if (u.role == Role.admin && u.active && (adminId.length == 0 || u.createdAt < users.byId(adminId).createdAt))
+                adminId = u.id;
+        auto all = spaces.all();
+        foreach (sp; all)
+            if (sp.managerId.length == 0 || users.byId(sp.managerId) is null) {
+                if (adminId.length == 0)
+                    break;
+                sp.managerId = adminId;
+                spaces.save(sp);
+                r.migratedManagers++;
+            }
+        const now = clock.now;
+        foreach (u; users.all()) {
+            if (u.legacyRole.length == 0)
+                continue;
+            SpaceRole role = u.legacyRole == "editor" ? SpaceRole.editor : SpaceRole.reader;
+            if (u.role == Role.user)
+                foreach (sp; all)
+                    if (memberships.find(sp.id, u.id) is null) {
+                        auto m = new Membership;
+                        m.id = ids.newId;
+                        m.spaceId = sp.id;
+                        m.userId = u.id;
+                        m.role = role;
+                        m.createdBy = "migration";
+                        m.createdAt = m.updatedAt = now;
+                        memberships.save(m);
+                        r.migratedMemberships++;
+                    }
+            u.legacyRole = "";
+            users.save(u); // now stored as "user"
+        }
     }
 
     private void seedDemo(string adminId) {
         const now = clock.now;
-        Space mk(string key, string name, string desc, string icon) {
+        Space mk(string key, string name, string desc, string icon, string parentId = "") {
             auto sp = new Space;
             sp.id = ids.newId;
+            sp.parentId = parentId;
             sp.key = key;
             sp.name = name;
             sp.description = desc;
             sp.icon = icon;
+            sp.managerId = adminId;
             sp.createdBy = adminId;
             sp.createdAt = sp.updatedAt = now;
             spaces.save(sp);
@@ -77,6 +123,8 @@ final class BootstrapService {
 
         auto general = mk("GEN", "General", "Company-wide knowledge, policies and how-tos", "sap-icon://course-book");
         auto it = mk("IT", "IT & Tools", "Guides for systems, tools and troubleshooting", "sap-icon://it-system");
+        auto network = mk("NET", "Network & VPN", "Remote access, Wi-Fi and network troubleshooting",
+            "sap-icon://chain-link", it.id);
 
         void art(Space sp, string title, string summary, string body, string[] tags) {
             auto a = new Article;
@@ -96,19 +144,19 @@ final class BootstrapService {
         art(general, "Welcome to the Knowledge Base",
             "What the knowledge management system offers and how to get started.",
             "# Welcome\n\nThis knowledge base collects **articles**, **documents** and other **media** "
-            ~ "in *spaces*.\n\n## Getting started\n\n- Browse the spaces in the navigation\n"
+            ~ "in *areas* and *sub-areas*.\n\n## Getting started\n\n- Browse the areas in the navigation\n"
             ~ "- Use the search field to find articles and file contents\n"
-            ~ "- Editors can create articles and upload documents\n\n"
-            ~ "Administrators manage users and spaces.", ["welcome", "getting-started"]);
+            ~ "- Every area has a **category manager** who assigns its users as readers or editors\n\n"
+            ~ "Administrators manage user accounts and top-level areas.", ["welcome", "getting-started"]);
         art(general, "Search tips",
             "Query syntax of the full-text search engine.",
             "# Search tips\n\n| Syntax | Meaning |\n|---|---|\n| `vpn client` | both words |\n"
             ~ "| `\"exact phrase\"` | words in this order |\n| `-draft` | exclude a word |\n"
             ~ "| `config*` | prefix search |\n\nTypos are corrected automatically (fuzzy matching). "
-            ~ "Results can be filtered by type, space, tag and media kind. The search covers titles, tags, "
-            ~ "article text and the text extracted from uploaded PDF, Office and text files.",
-            ["search", "help"]);
-        art(it, "VPN access for remote work",
+            ~ "Results can be filtered by type, area, tag and media kind. The search covers titles, tags, "
+            ~ "article text and the text extracted from uploaded PDF, Office and text files - in all areas "
+            ~ "you have access to.", ["search", "help"]);
+        art(network, "VPN access for remote work",
             "How to install and configure the VPN client.",
             "# VPN access\n\n1. Install the VPN client from the software portal\n"
             ~ "2. Sign in with your company account\n3. Select the nearest gateway\n\n"

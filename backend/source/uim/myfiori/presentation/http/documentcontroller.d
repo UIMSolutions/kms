@@ -102,6 +102,7 @@ final class DocumentController {
         r.get(apiBase ~ "/documents", authed(identity, (p, req, res) {
                 DocumentFilter f;
                 f.spaceId = qs(req, "space");
+                f.includeSubAreas = qs(req, "deep") == "true";
                 f.kind = qs(req, "kind");
                 f.tag = qs(req, "tag");
                 f.text = qs(req, "q");

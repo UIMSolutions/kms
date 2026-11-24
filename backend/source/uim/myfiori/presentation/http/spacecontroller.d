@@ -1,4 +1,4 @@
-/// /api/v1/spaces: knowledge spaces.
+/// /api/v1/spaces: areas and sub-areas, category manager, members.
 module uim.myfiori.presentation.http.spacecontroller;
 
 import vibe.data.json;
@@ -21,6 +21,8 @@ final class SpaceController {
 
     static SpaceInput parseInput(Json b) {
         SpaceInput i;
+        i.parentId = optString(b, "parentId");
+        i.managerId = optString(b, "managerId");
         i.key = optString(b, "key");
         i.name = optString(b, "name");
         i.description = optString(b, "description");
@@ -44,6 +46,22 @@ final class SpaceController {
             }));
         r.delete_(apiBase ~ "/spaces/:id", authed(identity, (p, req, res) {
                 spaces.remove(p, req.params["id"]);
+                sendNoContent(res);
+            }));
+        r.put(apiBase ~ "/spaces/:id/manager", authed(identity, (p, req, res) {
+                auto b = readJsonBody(req, maxBody);
+                sendJson(res, spaces.setManager(p, req.params["id"], requireString(b, "userId")));
+            }));
+        r.get(apiBase ~ "/spaces/:id/members", authed(identity, (p, req, res) {
+                auto list = spaces.members(p, req.params["id"]);
+                sendJson(res, Json(["items": serializeToJson(list), "total": Json(list.length)]));
+            }));
+        r.put(apiBase ~ "/spaces/:id/members/:userId", authed(identity, (p, req, res) {
+                auto b = readJsonBody(req, maxBody);
+                sendJson(res, spaces.setMember(p, req.params["id"], req.params["userId"], requireString(b, "role")));
+            }));
+        r.delete_(apiBase ~ "/spaces/:id/members/:userId", authed(identity, (p, req, res) {
+                spaces.removeMember(p, req.params["id"], req.params["userId"]);
                 sendNoContent(res);
             }));
     }

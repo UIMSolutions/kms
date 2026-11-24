@@ -1,34 +1,29 @@
-/// User roles. Ordered by privilege: a higher role includes all rights of the lower ones.
+/// Global user roles. Content rights are granted per area (see SpaceRole / SpaceAccess);
+/// the global role only distinguishes ordinary users from system administrators.
 module uim.myfiori.domain.enumerations.role;
 
-import std.conv : to;
 import std.uni : toLower;
 
 enum Role {
-    reader, /// read & search published knowledge, download media
-    editor, /// create / edit articles, upload & manage media
-    admin   /// manage users and spaces, see everything
+    user, /// rights come from area memberships and category-manager assignments
+    admin /// system administrator: users, all areas, search index, audit
 }
 
 string roleName(Role r) pure @safe {
     final switch (r) {
-    case Role.reader:
-        return "reader";
-    case Role.editor:
-        return "editor";
+    case Role.user:
+        return "user";
     case Role.admin:
         return "admin";
     }
 }
 
-/// Parses a role name (case-insensitive); returns false for unknown names.
+/// Parses a role name (case-insensitive). The pre-area names "reader" and "editor"
+/// are accepted as `user` (see `isLegacyRole`).
 bool tryParseRole(string s, out Role r) @safe {
     switch (s.toLower) {
-    case "reader":
-        r = Role.reader;
-        return true;
-    case "editor":
-        r = Role.editor;
+    case "user", "reader", "editor":
+        r = Role.user;
         return true;
     case "admin":
         r = Role.admin;
@@ -38,15 +33,20 @@ bool tryParseRole(string s, out Role r) @safe {
     }
 }
 
+/// Global roles of release 1.0 that became area memberships.
+bool isLegacyRole(string s) @safe {
+    auto l = s.toLower;
+    return l == "reader" || l == "editor";
+}
+
 bool atLeast(Role have, Role required) pure @safe nothrow {
     return cast(int) have >= cast(int) required;
 }
 
 unittest {
     Role r;
-    assert(tryParseRole("Editor", r) && r == Role.editor);
+    assert(tryParseRole("Admin", r) && r == Role.admin);
+    assert(tryParseRole("editor", r) && r == Role.user && isLegacyRole("editor"));
     assert(!tryParseRole("root", r));
-    assert(Role.admin.atLeast(Role.editor));
-    assert(!Role.reader.atLeast(Role.editor));
-    assert(roleName(Role.admin) == "admin");
+    assert(Role.admin.atLeast(Role.user) && !Role.user.atLeast(Role.admin));
 }

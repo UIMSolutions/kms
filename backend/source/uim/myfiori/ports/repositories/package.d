@@ -21,6 +21,15 @@ interface SpaceRepository {
     void remove(string id);
 }
 
+interface MembershipRepository {
+    Membership[] all();
+    Membership[] bySpace(string spaceId);
+    Membership[] byUser(string userId);
+    Membership find(string spaceId, string userId); /// null if missing
+    void save(Membership m);
+    void remove(string id);
+}
+
 interface ArticleRepository {
     Article[] all();
     Article byId(string id);

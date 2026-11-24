@@ -7,6 +7,11 @@ import vibe.data.serialization : optional;
 
 // ------------------------------------------------------------------ users & auth
 
+struct SpaceRoleDto {
+    string spaceId;
+    string role;
+}
+
 struct UserDto {
     string id;
     string username;
@@ -21,6 +26,26 @@ struct UserDto {
     string createdAt;
     string updatedAt;
     long version_;
+    /// effective area roles - only filled for the signed-in user (auth/me, login)
+    SpaceRoleDto[] spaceRoles;
+    bool canCreateContent; /// editor or manager in at least one area
+    bool managesAreas;     /// category manager of at least one area
+}
+
+/// minimal user information for member / manager pickers
+struct DirectoryEntryDto {
+    string id;
+    string username;
+    string displayName;
+    string email;
+}
+
+/// one area assignment of a user
+struct AssignmentDto {
+    string spaceId;
+    string spacePath;
+    string role;   /// reader, editor, manager
+    string source; /// "member", "manager", "inherited" (manager of a parent area)
 }
 
 struct LoginResult {
@@ -48,18 +73,45 @@ struct UserInput {
 
 struct SpaceDto {
     string id;
+    string parentId;
+    string parentPath;
+    string path;          /// "IT / Network"
+    size_t depth;         /// 1 = top-level area
     string key;
     string name;
     string description;
     string icon;
+    string managerId;
+    string managerName;
+    size_t childCount;
+    size_t memberCount;
     size_t articleCount;
     size_t documentCount;
+    string myRole;        /// effective role of the caller: reader, editor, manager
+    bool canWrite;
+    bool canManage;       /// edit, members, sub-areas
+    bool canGovern;       /// assign manager, delete
     string createdAt;
     string updatedAt;
     long version_;
 }
 
+struct MemberDto {
+    string id;            /// membership id ("" for managers)
+    string spaceId;
+    string userId;
+    string username;
+    string displayName;
+    string email;
+    string role;          /// reader, editor, manager
+    string source;        /// "member", "manager", "inherited"
+    string sourcePath;    /// area that grants an inherited manager role
+    bool active;
+}
+
 struct SpaceInput {
+    Nullable!string parentId;
+    Nullable!string managerId;
     Nullable!string key;
     Nullable!string name;
     Nullable!string description;
@@ -102,6 +154,7 @@ struct ArticleDto {
 
 struct ArticleFilter {
     string spaceId;
+    bool includeSubAreas; /// with spaceId: also list readable sub-areas
     string status;
     string tag;
     string authorId;
@@ -164,6 +217,7 @@ struct DocumentDto {
 
 struct DocumentFilter {
     string spaceId;
+    bool includeSubAreas;
     string kind;
     string tag;
     string text;
@@ -249,6 +303,7 @@ struct RecentItemDto {
 struct StatsDto {
     size_t users;
     size_t spaces;
+    size_t managedSpaces;
     size_t articles;
     size_t publishedArticles;
     size_t draftArticles;

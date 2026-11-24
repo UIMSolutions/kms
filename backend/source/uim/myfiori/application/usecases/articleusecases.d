@@ -19,14 +19,16 @@ final class ArticleInteractor : ArticleUseCase {
     private SpaceRepository spaces;
     private DocumentRepository documents;
     private SearchIndexer indexer;
+    private AccessResolver resolver;
     private Clock clock;
     private IdGenerator ids;
     private EventPublisher events;
     private DtoMapper mapper;
 
     this(ArticleRepository articles, ArticleVersionRepository history, SpaceRepository spaces,
-        DocumentRepository documents, SearchIndexer indexer, Clock clock, IdGenerator ids,
+        DocumentRepository documents, SearchIndexer indexer, AccessResolver resolver, Clock clock, IdGenerator ids,
         EventPublisher events, DtoMapper mapper) {
+        this.resolver = resolver;
         this.articles = articles;
         this.history = history;
         this.spaces = spaces;
@@ -39,10 +41,16 @@ final class ArticleInteractor : ArticleUseCase {
     }
 
     Page!ArticleDto list(in Principal p, ArticleFilter f) {
+        auto access = resolver.resolve(p);
         auto text = f.text.strip.toLower;
         auto tag = f.tag.strip.toLower;
-        auto all = (f.spaceId.length ? articles.bySpace(f.spaceId) : articles.all()).filter!((a) {
-            if (!AccessPolicy.canReadArticle(p, a))
+        string[] areas;
+        if (f.spaceId.length)
+            areas = [f.spaceId] ~ (f.includeSubAreas ? access.tree.descendants(f.spaceId) : null);
+        auto all = articles.all().filter!((a) {
+            if (areas.length && !areas.canFind(a.spaceId))
+                return false;
+            if (!access.canReadArticle(a))
                 return false;
             if (f.status.length && statusName(a.status) != f.status)
                 return false;
@@ -70,79 +78,84 @@ final class ArticleInteractor : ArticleUseCase {
         Page!ArticleDto r;
         r.total = all.length;
         foreach (a; slicePage(all, f.skip, f.top))
-            r.items ~= mapper.article(a, p, f.withBody);
+            r.items ~= mapper.article(a, access, f.withBody);
         return r;
     }
 
     ArticleDto get(in Principal p, string id, bool countView = false) {
-        auto a = readable(p, id);
+        auto access = resolver.resolve(p);
+        auto a = readable(access, id);
         if (countView) {
             a.views++;
             articles.save(a);
         }
-        return mapper.article(a, p);
+        return mapper.article(a, access);
     }
 
     ArticleDto create(in Principal p, ArticleInput input) {
-        AccessPolicy.requireWrite(p);
+        auto access = resolver.resolve(p);
         auto a = new Article;
         a.id = ids.newId;
         a.authorId = p.userId;
         a.createdAt = clock.now;
-        apply(a, input, true);
+        apply(access, a, input, true);
         a.updatedBy = p.userId;
         a.updatedAt = a.createdAt;
         articles.save(a);
         indexer.index(a);
         events.publish(DomainEvent("article.created", a.id, p.userId, a.title, clock.now));
-        return mapper.article(a, p);
+        return mapper.article(a, access);
     }
 
     ArticleDto update(in Principal p, string id, ArticleInput input, long expectedVersion = 0) {
-        AccessPolicy.requireWrite(p);
+        auto access = resolver.resolve(p);
         auto a = require(id);
+        access.requireWrite(a.spaceId);
         checkVersion(a, expectedVersion);
         snapshot(a, p.userId);
-        apply(a, input, false);
+        apply(access, a, input, false);
         touch(a, p);
         events.publish(DomainEvent("article.updated", a.id, p.userId, a.title, clock.now));
-        return mapper.article(a, p);
+        return mapper.article(a, access);
     }
 
     ArticleDto publish(in Principal p, string id) {
-        AccessPolicy.requireWrite(p);
+        auto access = resolver.resolve(p);
         auto a = require(id);
+        access.requireWrite(a.spaceId);
         snapshot(a, p.userId);
         a.publish(clock.now);
         touch(a, p);
         events.publish(DomainEvent("article.published", a.id, p.userId, a.title, clock.now));
-        return mapper.article(a, p);
+        return mapper.article(a, access);
     }
 
     ArticleDto archive(in Principal p, string id) {
-        AccessPolicy.requireWrite(p);
+        auto access = resolver.resolve(p);
         auto a = require(id);
+        access.requireWrite(a.spaceId);
         snapshot(a, p.userId);
         a.archive();
         touch(a, p);
         events.publish(DomainEvent("article.archived", a.id, p.userId, a.title, clock.now));
-        return mapper.article(a, p);
+        return mapper.article(a, access);
     }
 
     ArticleDto reopen(in Principal p, string id) {
-        AccessPolicy.requireWrite(p);
+        auto access = resolver.resolve(p);
         auto a = require(id);
+        access.requireWrite(a.spaceId);
         if (a.status == ArticleStatus.draft)
             throw new ConflictException("Article is already a draft");
         snapshot(a, p.userId);
         a.reopen();
         touch(a, p);
-        return mapper.article(a, p);
+        return mapper.article(a, access);
     }
 
     ArticleVersionDto[] versions(in Principal p, string id) {
-        AccessPolicy.requireWrite(p);
-        require(id);
+        auto access = resolver.resolve(p);
+        access.requireWrite(require(id).spaceId);
         ArticleVersionDto[] r;
         foreach (v; history.byArticle(id))
             r ~= mapper.articleVersion(v);
@@ -150,8 +163,9 @@ final class ArticleInteractor : ArticleUseCase {
     }
 
     ArticleDto restore(in Principal p, string id, string versionId) {
-        AccessPolicy.requireWrite(p);
+        auto access = resolver.resolve(p);
         auto a = require(id);
+        access.requireWrite(a.spaceId);
         auto v = history.byId(versionId);
         if (v is null || v.articleId != a.id)
             throw new NotFoundException("Version not found");
@@ -162,12 +176,13 @@ final class ArticleInteractor : ArticleUseCase {
         a.tags = v.tags.dup;
         touch(a, p);
         events.publish(DomainEvent("article.restored", a.id, p.userId, "v" ~ v.version_.to!string, clock.now));
-        return mapper.article(a, p);
+        return mapper.article(a, access);
     }
 
     void remove(in Principal p, string id) {
+        auto access = resolver.resolve(p);
         auto a = require(id);
-        AccessPolicy.requireDelete(p, a.authorId);
+        access.requireDelete(a.spaceId, a.authorId);
         articles.remove(a.id);
         history.removeByArticle(a.id);
         indexer.remove(a.id);
@@ -183,9 +198,9 @@ final class ArticleInteractor : ArticleUseCase {
         return a;
     }
 
-    private Article readable(in Principal p, string id) {
+    private Article readable(in SpaceAccess access, string id) {
         auto a = require(id);
-        if (!AccessPolicy.canReadArticle(p, a))
+        if (!access.canReadArticle(a))
             throw new NotFoundException("Article not found"); // do not reveal drafts
         return a;
     }
@@ -196,13 +211,14 @@ final class ArticleInteractor : ArticleUseCase {
                     ~ a.version_.to!string ~ ") - reload and try again");
     }
 
-    private void apply(Article a, ArticleInput input, bool creating) {
-        if (!input.spaceId.isNull) {
+    private void apply(in SpaceAccess access, Article a, ArticleInput input, bool creating) {
+        if (!input.spaceId.isNull && input.spaceId.get != a.spaceId) {
             if (spaces.byId(input.spaceId.get) is null)
-                throw new ValidationException("Unknown space");
+                throw new ValidationException("Unknown area");
+            access.requireWrite(input.spaceId.get); // also when moving to another area
             a.spaceId = input.spaceId.get;
         } else if (creating)
-            throw new ValidationException("Space is required");
+            throw new ValidationException("Area is required");
         if (!input.title.isNull)
             a.title = input.title.get.strip;
         if (!input.summary.isNull) {
@@ -217,7 +233,8 @@ final class ArticleInteractor : ArticleUseCase {
         if (!input.attachmentIds.isNull) {
             string[] ids;
             foreach (id; input.attachmentIds.get) {
-                if (documents.byId(id) is null)
+                auto doc = documents.byId(id);
+                if (doc is null || !access.canRead(doc.spaceId))
                     throw new ValidationException("Unknown attachment " ~ id);
                 if (!ids.canFind(id))
                     ids ~= id;

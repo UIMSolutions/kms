@@ -9,14 +9,16 @@ import uim.myfiori.ports;
 
 final class SearchInteractor : SearchUseCase {
     private SearchIndexer indexer;
+    private AccessResolver resolver;
     private ArticleRepository articles;
     private DocumentRepository documents;
     private DtoMapper mapper;
     private EventPublisher events;
     private Clock clock;
 
-    this(SearchIndexer indexer, ArticleRepository articles, DocumentRepository documents, DtoMapper mapper,
-        EventPublisher events, Clock clock) {
+    this(SearchIndexer indexer, AccessResolver resolver, ArticleRepository articles, DocumentRepository documents,
+        DtoMapper mapper, EventPublisher events, Clock clock) {
+        this.resolver = resolver;
         this.indexer = indexer;
         this.articles = articles;
         this.documents = documents;
@@ -30,8 +32,9 @@ final class SearchInteractor : SearchUseCase {
             throw new ValidationException("Query too long");
         if (q.top > 200)
             q.top = 200;
-        const editor = AccessPolicy.canWrite(p);
-        auto r = indexer.engine.search(q, (ref const IndexEntry e) => editor || e.status == "published");
+        auto access = resolver.resolve(p);
+        auto tree = access.tree;
+        auto r = indexer.engine.search(q, (ref const IndexEntry e) => access.canReadStatus(e.spaceId, e.status));
         SearchResultDto d;
         d.query = q.text;
         d.total = r.total;
@@ -39,11 +42,11 @@ final class SearchInteractor : SearchUseCase {
         d.tookMs = r.tookMicros / 1000.0;
         foreach (h; r.hits)
             d.hits ~= SearchHitDto(h.id, cast(string) h.kind, h.title, h.snippet, h.score, h.spaceId,
-                mapper.spaceName(h.spaceId), h.tags.dup, h.status, h.mediaKind, h.updatedAt);
+                tree.path(h.spaceId), h.tags.dup, h.status, h.mediaKind, h.updatedAt);
         foreach (f; r.kinds)
             d.kinds ~= FacetDto(f.value, f.value, f.count);
         foreach (f; r.spaces)
-            d.spaces ~= FacetDto(f.value, mapper.spaceName(f.value), f.count);
+            d.spaces ~= FacetDto(f.value, tree.path(f.value), f.count);
         foreach (f; r.tags)
             d.tags ~= FacetDto(f.value, f.value, f.count);
         foreach (f; r.mediaKinds)
@@ -54,8 +57,8 @@ final class SearchInteractor : SearchUseCase {
     }
 
     string[] suggest(in Principal p, string prefix) {
-        const editor = AccessPolicy.canWrite(p);
-        return indexer.engine.suggest(prefix, 8, (ref const IndexEntry e) => editor || e.status == "published");
+        auto access = resolver.resolve(p);
+        return indexer.engine.suggest(prefix, 8, (ref const IndexEntry e) => access.canReadStatus(e.spaceId, e.status));
     }
 
     size_t reindex(in Principal p) {
